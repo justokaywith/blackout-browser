@@ -1,0 +1,1 @@
+const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('addressPopup',{rows:callback=>ipcRenderer.on('browser:address-rows',(_event,data)=>callback(data)),choose:index=>ipcRenderer.invoke('browser:address-choice',index)});

@@ -1,0 +1,254 @@
+:root[data-theme="ember"] {
+  --accent: #ff875c;
+  --hot: #ffbd58;
+  --mint: #f4ab84;
+  --accent-rgb: 255, 135, 92;
+}
+:root[data-theme="aurora"] {
+  --accent: #69e0d2;
+  --hot: #a182ff;
+  --mint: #8bedb1;
+  --accent-rgb: 105, 224, 210;
+}
+
+/* ==========================================================================
+   LIGHT MODE SURFACE PALETTE & COMPREHENSIVE OVERRIDES
+   ========================================================================== */
+:root[data-surface="light"] {
+  color-scheme: light;
+  --bg: #f5f4fa;
+  --chrome: #eae7f4;
+  --panel: #ffffff;
+  --panel2: #edeaf5;
+  --ink: #16151f;
+  --muted: #676579;
+  --line: #d6d2e2;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+:root[data-surface="light"] html,
+:root[data-surface="light"] body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* Top Chrome & Tabs */
+:root[data-surface="light"] .chrome {
+  background: #eae7f4;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-surface="light"] .tab-row {
+  background: #dedae8;
+}
+
+:root[data-surface="light"] .tab-item {
+  background: #e3dfed;
+  border: 1px solid #cbcae0;
+  border-bottom: 0;
+  color: var(--muted);
+}
+
+:root[data-surface="light"] .tab-item:hover {
+  background: #ece9f5;
+  color: var(--ink);
+}
+
+:root[data-surface="light"] .tab-item.active {
+  background: #ffffff;
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: 0 -2px 0 0 var(--accent);
+}
+
+:root[data-surface="light"] .tab-close:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--ink);
+}
+
+:root[data-surface="light"] .new-tab:hover {
+  background: #dedae8;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+:root[data-surface="light"] .window-actions button:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--ink);
+}
+
+/* Navigation Row & Omnibox */
+:root[data-surface="light"] .nav-row {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+
+:root[data-surface="light"] .nav-row form {
+  background: #f4f2fa;
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-surface="light"] .nav-row input {
+  color: var(--ink);
+}
+
+:root[data-surface="light"] .nav-icon-btn svg {
+  color: var(--ink);
+}
+
+:root[data-surface="light"] .mode-pill {
+  background: #f0edf8 !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+}
+
+/* Settings Panel & Sidebar (Fixes unreadable black sidebar) */
+:root[data-surface="light"] .settings-panel {
+  background: #f5f4fa;
+}
+
+:root[data-surface="light"] .settings-panel aside {
+  background: #eae7f4 !important;
+  border-right: 1px solid var(--line) !important;
+}
+
+:root[data-surface="light"] .settings-brand {
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .settings-panel aside > input {
+  background: #ffffff !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .settings-panel nav button {
+  color: var(--ink) !important;
+  font-weight: 500;
+}
+
+:root[data-surface="light"] .settings-panel nav button:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .settings-panel nav button.active {
+  background: rgba(var(--accent-rgb), 0.16) !important;
+  color: var(--accent) !important;
+  font-weight: 700 !important;
+}
+
+:root[data-surface="light"] .settings-content {
+  background: #f5f4fa !important;
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .settings-content h1,
+:root[data-surface="light"] .settings-content h2,
+:root[data-surface="light"] .settings-content h3 {
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .settings-content p {
+  color: var(--muted) !important;
+}
+
+:root[data-surface="light"] .setting-row,
+:root[data-surface="light"] .roadmap,
+:root[data-surface="light"] .mode-grid article {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+:root[data-surface="light"] .setting-row select {
+  background: #f4f2fa !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+}
+
+/* New Tab Page in Light Mode */
+:root[data-surface="light"] .newtab {
+  background: radial-gradient(circle at 78% 36%, rgba(var(--accent-rgb), 0.12), transparent 30%), radial-gradient(circle at 12% 86%, rgba(255, 104, 77, 0.08), transparent 35%), #f5f4fa !important;
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .newtab h1 {
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .newtab-inner > p:not(.kicker) {
+  color: var(--muted) !important;
+}
+
+:root[data-surface="light"] .newtab form {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07) !important;
+}
+
+:root[data-surface="light"] .newtab form input {
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .favorite-card {
+  background: #ffffff !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+:root[data-surface="light"] .favorite-card b {
+  color: var(--ink) !important;
+}
+
+/* Bookmarks Bar & Dropdowns in Light Mode */
+:root[data-surface="light"] .bookmarks-bar {
+  background: #eae7f4 !important;
+  border-top-color: var(--line) !important;
+}
+
+:root[data-surface="light"] .bookmark-item {
+  background: #ffffff !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .bookmark-item:hover {
+  background: #f0edf8 !important;
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .app-menu,
+:root[data-surface="light"] .protection-menu,
+:root[data-surface="light"] .extensions-menu,
+:root[data-surface="light"] .downloads-menu {
+  background: #ffffff !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.12) !important;
+}
+
+:root[data-surface="light"] .ext-dialog-close {
+  background: #f4f2fa !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-surface="light"] .hero-atom b,
+:root[data-surface="light"] .startup-atom b {
+  background: radial-gradient(circle at 35% 30%, #dedae8, #beb9d0 67%) !important;
+  border-color: #beb9d0 !important;
+}
+
+:root[data-motion="reduced"] .topographic,
+:root[data-motion="reduced"] .starfield,
+:root[data-motion="reduced"] [data-electron] {
+  animation: none !important;
+}
+:root[data-motion="reduced"] .starfield {
+  display: none;
+}

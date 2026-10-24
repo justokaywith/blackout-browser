@@ -1,0 +1,9 @@
+const fs=require('node:fs'),path=require('node:path');
+const TTL=7*86400000;
+function safeTab(tab){if(tab.url===''||tab.url==='about:blank')return {url:'',title:'New tab',groupId:null};try{const u=new URL(tab.url);if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.href.length>4096||/[?&](?:token|code|password|secret|key|access_token|id_token)=/i.test(u.href))return null;return {url:u.href,title:typeof tab.title==='string'?tab.title.slice(0,200):'',groupId:typeof tab.groupId==='string'?tab.groupId.slice(0,64):null}}catch{return null}}
+function snapshot(context){if(context.profile.mode!=='standard')return null;const source=[...context.tabs.values()],entries=source.map((tab,index)=>({tab:safeTab(tab),active:tab===context.activeTab,index})).filter(e=>e.tab).slice(0,100);if(entries.length<2)return null;return {tabs:entries.map(e=>e.tab),activeIndex:Math.max(0,entries.findIndex(e=>e.active)),closedAt:Date.now()}}
+function read(file){try{if(fs.statSync(file).size>2*1024*1024)return [];const x=JSON.parse(fs.readFileSync(file,'utf8'));return Array.isArray(x)?x.filter(w=>w&&Array.isArray(w.tabs)&&Number.isFinite(w.closedAt)&&Date.now()-w.closedAt<TTL).slice(-10).map(w=>({...w,tabs:w.tabs.map(safeTab).filter(Boolean).slice(0,100)})).filter(w=>w.tabs.length>=2):[]}catch{return []}}
+function write(file,data){fs.mkdirSync(path.dirname(file),{recursive:true});const temp=file+'.tmp';fs.writeFileSync(temp,JSON.stringify(data),{mode:0o600});fs.renameSync(temp,file)}
+function saveWindow(file,context){const item=snapshot(context);if(!item)return false;write(file,[...read(file),item].slice(-10));return true}
+function takeWindow(file){const items=read(file),item=items.pop();if(!item)return null;write(file,items);return item}
+module.exports={safeTab,snapshot,read,saveWindow,takeWindow};

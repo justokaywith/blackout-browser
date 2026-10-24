@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="orbit" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c2acff"/><stop offset=".62" stop-color="#726b92"/><stop offset="1" stop-color="#343648"/></linearGradient>
+    <linearGradient id="escape" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#9677ff"/><stop offset="1" stop-color="#ff684d"/></linearGradient>
+    <radialGradient id="core"><stop stop-color="#ff946b"/><stop offset="1" stop-color="#ff684d" stop-opacity=".12"/></radialGradient>
+  </defs>
+  <rect width="256" height="256" rx="72" fill="#10121e"/>
+  <g fill="none" stroke="url(#orbit)" stroke-width="7" stroke-linecap="round" opacity=".9">
+    <ellipse cx="128" cy="128" rx="81" ry="35" transform="rotate(-31 128 128)"/>
+    <ellipse cx="128" cy="128" rx="81" ry="35" transform="rotate(31 128 128)"/>
+  </g>
+  <path d="M164 83c15-15 28-25 43-32" fill="none" stroke="url(#escape)" stroke-width="8" stroke-linecap="round" stroke-dasharray="9 11"/>
+  <circle cx="128" cy="128" r="29" fill="url(#core)" opacity=".24"/>
+  <circle cx="128" cy="128" r="15" fill="#171a28" stroke="#8b829e" stroke-width="4"/>
+  <circle cx="218" cy="44" r="12" fill="#ff684d"/><circle cx="218" cy="44" r="4" fill="#ffe0b9"/>
+</svg>

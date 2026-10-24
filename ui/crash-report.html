@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Blackout Browser — Crash Report</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #090a11;
+      --card: #151622;
+      --card-border: #2a2b3d;
+      --accent: #9a7aff;
+      --hot: #ff684d;
+      --mint: #77e4c4;
+      --ink: #f4f1ff;
+      --muted: #9594a8;
+      --font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+    .titlebar {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      background: #11121c;
+      border-bottom: 1px solid var(--card-border);
+      -webkit-app-region: drag;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--ink);
+    }
+    .brand img {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+    .win-close {
+      width: 32px;
+      height: 28px;
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      border-radius: 4px;
+      -webkit-app-region: no-drag;
+    }
+    .win-close:hover {
+      background: #d64242;
+      color: #fff;
+    }
+    main {
+      flex: 1;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow: hidden;
+    }
+    .header-area {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .crash-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 104, 77, 0.12);
+      border: 1px solid rgba(255, 104, 77, 0.3);
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      color: var(--hot);
+      flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+    .header-text p {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .support-pill {
+      display: inline-block;
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mint);
+    }
+    .report-box {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .report-box-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .report-text {
+      flex: 1;
+      background: #0d0e17;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: Consolas, 'Cascadia Code', monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #cfcfe0;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      user-select: text;
+    }
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid var(--card-border);
+    }
+    .footer-left {
+      display: flex;
+      gap: 10px;
+    }
+    .footer-right {
+      display: flex;
+      gap: 10px;
+    }
+    button.btn {
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 9px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      border: 1px solid var(--card-border);
+      background: var(--card);
+      color: var(--ink);
+    }
+    button.btn:hover {
+      border-color: var(--accent);
+      background: #1c1d2e;
+    }
+    button.btn-primary {
+      background: linear-gradient(110deg, var(--accent), var(--hot));
+      border: 0;
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(154, 122, 255, 0.35);
+    }
+    button.btn-primary:hover {
+      box-shadow: 0 6px 18px rgba(154, 122, 255, 0.5);
+      transform: translateY(-1px);
+    }
+    button.btn-mint {
+      border-color: rgba(119, 228, 196, 0.35);
+      color: var(--mint);
+    }
+    button.btn-mint:hover {
+      background: rgba(119, 228, 196, 0.1);
+      border-color: var(--mint);
+    }
+    .toast {
+      position: absolute;
+      bottom: 64px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--mint);
+      color: #090a11;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    <div class="brand">
+      <img src="blackout-mark.svg" alt="">
+      <span>BLACKOUT CRASH REPORT</span>
+    </div>
+    <button class="win-close" id="btn-close-x" aria-label="Close">×</button>
+  </div>
+
+  <main>
+    <div class="header-area">
+      <div class="crash-icon">⚠</div>
+      <div class="header-text">
+        <h1 id="crash-title">Blackout Browser encountered an unexpected problem</h1>
+        <p>A fatal error or crash occurred. You can submit this diagnostic log directly to the Pactuno support team to help us fix the issue.</p>
+        <span class="support-pill">Support email: support@pactuno.online</span>
+      </div>
+    </div>
+
+    <div class="report-box">
+      <div class="report-box-label">Diagnostic Information</div>
+      <pre class="report-text" id="report-content">Generating crash diagnostics...</pre>
+    </div>
+
+    <div class="footer">
+      <div class="footer-left">
+        <button class="btn btn-mint" id="btn-copy">
+          <span id="btn-copy-label">Copy Error Log</span>
+        </button>
+        <button class="btn" id="btn-restart">
+          <span>Restart Browser</span>
+        </button>
+      </div>
+
+      <div class="footer-right">
+        <button class="btn" id="btn-close">Close</button>
+        <button class="btn btn-primary" id="btn-email">
+          <span>Email to support@pactuno.online</span>
+          <span>✉</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script>
+    (async function() {
+      const reportContent = document.getElementById('report-content');
+      const crashTitle = document.getElementById('crash-title');
+      const btnEmail = document.getElementById('btn-email');
+      const btnCopy = document.getElementById('btn-copy');
+      const btnCopyLabel = document.getElementById('btn-copy-label');
+      const btnRestart = document.getElementById('btn-restart');
+      const btnClose = document.getElementById('btn-close');
+      const btnCloseX = document.getElementById('btn-close-x');
+      const toast = document.getElementById('toast');
+
+      let currentReport = '';
+      let supportEmail = 'support@pactuno.online';
+
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
+
+      if (window.crashApi) {
+        try {
+          const data = await window.crashApi.getCrashData();
+          if (data) {
+            if (data.title) crashTitle.textContent = data.title;
+            if (data.supportEmail) supportEmail = data.supportEmail;
+            currentReport = data.report || data.details || 'No stack trace available.';
+            reportContent.textContent = currentReport;
+          }
+        } catch (e) {
+          reportContent.textContent = 'Failed to load crash report data: ' + e.message;
+        }
+
+        btnEmail.addEventListener('click', () => {
+          const subject = encodeURIComponent('Blackout Browser Crash Report [v0.2.3]');
+          const body = encodeURIComponent(
+            'Hello Support Team,\n\n' +
+            'Blackout Browser encountered an unexpected crash. Diagnostic details are attached below:\n\n' +
+            currentReport + '\n\n' +
+            'User Notes (optional):\n'
+          );
+          const mailto = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
+          window.crashApi.sendEmail(mailto);
+        });
+
+        btnCopy.addEventListener('click', async () => {
+          try {
+            await window.crashApi.copyReport(currentReport);
+            btnCopyLabel.textContent = 'Copied ✓';
+            showToast('Copied diagnostic report to clipboard!');
+            setTimeout(() => { btnCopyLabel.textContent = 'Copy Error Log'; }, 2000);
+          } catch {
+            showToast('Failed to copy.');
+          }
+        });
+
+        btnRestart.addEventListener('click', () => {
+          window.crashApi.restartApp();
+        });
+
+        btnClose.addEventListener('click', () => {
+          window.crashApi.closeWindow();
+        });
+
+        btnCloseX.addEventListener('click', () => {
+          window.crashApi.closeWindow();
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

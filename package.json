@@ -1,0 +1,59 @@
+{
+  "name": "@pactuno/blackout-browser",
+  "version": "0.2.31",
+  "private": true,
+  "description": "Early-access Pactuno Blackout Browser desktop shell",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "package:win": "electron-builder --win nsis --x64",
+    "package:win:arm64": "electron-builder --win nsis --arm64",
+    "package:win:all": "electron-builder --win nsis --x64 --arm64"
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "author": "Pactuno",
+  "build": {
+    "appId": "online.pactuno.blackout",
+    "productName": "Blackout Browser",
+    "electronDist": "node_modules/electron/dist",
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "vendor/yt-dlp.exe",
+        "to": "bin/yt-dlp.exe"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "ui/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "Blackout-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerHeaderIcon": "build/icon.ico",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "include": "build/installer.nsh"
+    }
+  }
+}

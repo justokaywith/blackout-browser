@@ -1,0 +1,1 @@
+:root[data-profile="incognito"] #profile-dot{background:var(--accent);box-shadow:0 0 9px var(--accent)}:root[data-profile="incognito"] .newtab{background:radial-gradient(circle at 75% 32%,rgba(var(--accent-rgb),.2),transparent 30%),#070810}:root[data-profile="incognito"] #add-favorite,:root[data-profile="incognito"] #favorite-current{opacity:.45;pointer-events:none}

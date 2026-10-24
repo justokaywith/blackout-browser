@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Blackout Extensions</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #f4f1ff;
+    }
+    .menu {
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+      border: 1px solid #3b3c4c;
+      border-radius: 14px;
+      background: #171822;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+      color: #9c9bad;
+      font-weight: 700;
+    }
+    .link-btn {
+      background: transparent;
+      border: 0;
+      color: #9a7aff;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .link-btn:hover { text-decoration: underline; }
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 220px;
+    }
+    .ext-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      gap: 10px;
+      transition: all 0.15s ease;
+    }
+    .ext-item:hover {
+      background: #222332;
+      border-color: #38394a;
+    }
+    .ext-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      color: inherit;
+    }
+    .ext-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+    }
+    .ext-info b {
+      font-size: 12px;
+      color: #f4f1ff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    .ext-info small {
+      font-size: 10px;
+      color: #9c9bad;
+      margin-top: 2px;
+    }
+    .ext-pin {
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: #9c9bad;
+      cursor: pointer;
+      font-size: 12px;
+      opacity: 0.6;
+      transition: all 0.15s ease;
+    }
+    .ext-pin:hover {
+      background: rgba(255, 255, 255, 0.08);
+      opacity: 1;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .ext-pin.pinned {
+      opacity: 1;
+      background: rgba(154, 122, 255, 0.22);
+      border-color: rgba(154, 122, 255, 0.4);
+    }
+    .foot {
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .foot button {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      background: #222332;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f4f1ff;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .foot button:hover {
+      border-color: #9a7aff;
+      background: #28293d;
+    }
+    .empty-state {
+      color: #9c9bad;
+      font-size: 12px;
+      padding: 24px 8px;
+      text-align: center;
+    }
+  </style>
+<link rel="stylesheet" href="./browser-finish.css"></head>
+<body>
+  <div class="menu">
+    <div class="head">
+      <span>EXTENSIONS</span>
+      <button type="button" class="link-btn" id="btn-manage">Manage</button>
+    </div>
+    <div class="list" id="extensions-list">
+      <div class="empty-state">Loading extensions...</div>
+    </div>
+    <div class="foot">
+      <button type="button" id="btn-load-unpacked">📁 Load unpacked extension...</button>
+    </div>
+  </div>
+
+  <script src="extensions-popup.js"></script>
+</body>
+</html>

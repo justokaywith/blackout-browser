@@ -1,0 +1,10 @@
+node_modules/
+release*/
+work/
+.*cache/
+.build-temp/
+*.log
+.env*
+*.pem
+*.key
+vendor/*.exe

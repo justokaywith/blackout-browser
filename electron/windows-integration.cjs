@@ -1,0 +1,6 @@
+const fs=require('node:fs'),path=require('node:path'),{execFile}=require('node:child_process');
+const APP_ID='online.pactuno.blackout',TOAST_ID='B192965D-13C9-47B5-9628-7D5F0C9BB7D1';
+function registerBrowser(executable){const script=fs.readFileSync(path.join(__dirname,'register-browser.ps1'),'utf8');const command='& {\n'+script+'\n} -Target '+"'"+executable.replaceAll("'","''")+"'";return new Promise((resolve,reject)=>execFile('powershell.exe',['-NoProfile','-NonInteractive','-Command',command],{windowsHide:true,timeout:20000},error=>error?reject(error):resolve(true)));}
+function notificationShortcut({app,shell,executable}){const file=path.join(app.getPath('appData'),'Microsoft','Windows','Start Menu','Programs','Blackout Browser.lnk');fs.mkdirSync(path.dirname(file),{recursive:true});if(!shell.writeShortcutLink(file,fs.existsSync(file)?'update':'create',{target:executable,cwd:path.dirname(executable),description:'Blackout Browser',icon:executable,iconIndex:0,appUserModelId:APP_ID,toastActivatorClsid:TOAST_ID}))throw Error('Could not register notification shortcut.');}
+const defaultAppsUrl='ms-settings:defaultapps?registeredAppUser=BlackoutBrowser';
+module.exports={APP_ID,TOAST_ID,registerBrowser,notificationShortcut,defaultAppsUrl};
