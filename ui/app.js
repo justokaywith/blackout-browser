@@ -507,7 +507,7 @@ function renderFavorites(items,writable){
     if (grid) {
       const card=document.createElement('article');
       card.className='favorite-card';
-
+      
 
       const open=document.createElement('button');
       open.className='favorite-open';
@@ -3472,3 +3472,4 @@ $('#tab-group-create')?.addEventListener('submit',async event=>{
 });
 
 window.blackout?.runtimeInfo?.().then(info=>{const el=document.querySelector('#runtime-version');if(el&&info)el.textContent='Chromium '+info.chromium+' · Electron '+info.electron+' · '+info.platform;}).catch(()=>{});
+

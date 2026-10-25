@@ -73,8 +73,8 @@ test('settings exposes the ten approved sections without false protection claims
 
 test('package and visible about copy identify v0.2', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.version, '0.2.31');
-  assert.match(read('ui/index.html'), /Blackout 0\.2\.31/);
+  assert.equal(pkg.version, '0.2.32');
+  assert.match(read('ui/index.html'), /Blackout 0\.2\.32/);
 });
 
 test('image context menu supports download, copy image, copy address, and open in new tab', () => {
@@ -156,3 +156,5 @@ test('top bar and shell include Universal Music Player controls without a separa
   assert.match(popupJs, /applyBrowserTheme/);
   assert.match(popupJs, /getUiAppearance/);
 });
+
+

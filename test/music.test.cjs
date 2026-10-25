@@ -134,3 +134,4 @@ test('music popup and main UI include favorites star, cache, and library views',
   assert.match(preload, /toggleMusicFavorite:/);
   assert.match(preload, /cacheMusicTrack:/);
 });
+

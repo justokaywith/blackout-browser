@@ -94,7 +94,10 @@ const AD_SKIP_SCRIPT = `
           '.ytp-ad-skip-button-modern',
           '.ytp-skip-ad-button',
           '.ytp-ad-overlay-close-button',
-          'button.ytp-ad-skip-button-icon'
+          'button.ytp-ad-skip-button-icon',
+          '.ytp-ad-skip-button-slot button',
+          '.ytp-ad-skip-button-container button',
+          '[class*="ytp-ad-skip-button"]'
         ];
         for (const sel of skipSelectors) {
           const btn = player.querySelector(sel);
