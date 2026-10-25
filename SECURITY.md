@@ -10,8 +10,8 @@ Only the latest release receives active security patches:
 
 | Version | Supported |
 |---|---|
-| v0.2.x | ✅ Supported |
-| < v0.2.0 | ❌ End of Life |
+| v0.2.x | Supported |
+| < v0.2.0 | End of Life |
 
 ---
 

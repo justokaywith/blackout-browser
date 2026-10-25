@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🌑 Blackout Browser</h1>
+  <h1>Blackout Browser</h1>
   <p><strong>The Sovereign Dark Desktop Browser for Deep Focus &amp; Heavy Multitasking</strong></p>
   <p>
     Built with Electron and Chromium for Windows. Minimalist, privacy-first, with native vertical workflows and local media caching.
@@ -39,16 +39,16 @@ Modern mainstream browsers have become heavy notification centers packed with sp
 
 ## Key Features
 
-### 🗂️ Advanced Tab Management & Recovery
+### Advanced Tab Management & Recovery
 * **Mouse Reordering & Fluid Selection:** Drag and rearrange tabs easily; double-click any tab to close instantly.
 * **Durable Session Recovery:** Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> to restore recently closed tabs or restore an entire previous session across browser restarts.
 * **True Private Windows:** Dedicated in-memory sessions that leave zero disk trace, completely isolated from normal saved recovery.
 
-### 🎵 Glassmorphic Music Player & Offline Audio
+### Glassmorphic Music Player & Offline Audio
 * **Theme-Synced Player:** Frosted glass overlay that adapts to dark appearance themes.
 * **Verified Local Caching:** Automatically saves streamed tracks locally into safe cache storage so music continues playing even when you go offline.
 
-### 🛡️ Privacy & Web Apps Support
+### Privacy & Web Apps Support
 * **Ad & Tracker Neutralization:** Enhanced filtering for video stream ads, popups, and invasive tracking scripts.
 * **Modern Client Hints:** Complete User-Agent Client Hints profile ensuring seamless support for WhatsApp Web and modern web applications.
 * **Windows System Integration:** Full native registration for default browser capabilities, URL schemes (`http`, `https`), and document formats (`.html`, `.htm`, `.pdf`, `.svg`, `.webp`).
@@ -59,8 +59,8 @@ Modern mainstream browsers have become heavy notification centers packed with sp
 
 ### Option 1: Standalone Installer (Recommended)
 Download the latest verified Windows setup package:
-* 📥 **[Download Blackout-Setup.exe](https://pactuno.online/downloads/Blackout-Setup.exe)** (Direct from Pactuno CDN)
-* 📦 **[View GitHub Releases](https://github.com/justokaywith/blackout-browser/releases/latest)**
+* **[Download Blackout-Setup.exe](https://pactuno.online/downloads/Blackout-Setup.exe)** (Direct from Pactuno CDN)
+* **[View GitHub Releases](https://github.com/justokaywith/blackout-browser/releases/latest)**
 
 Run `Blackout-Setup-0.2.32.exe` to install. The browser automatically registers Windows default application associations.
 
