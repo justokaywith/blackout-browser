@@ -1,8 +1,12 @@
 const {pathToFileURL}=require('node:url');
 function externalTarget(args){
  for(const arg of args.slice(1)){
-  if(/^https?:\/\//i.test(arg)){try{const url=new URL(arg);if(!url.username&&!url.password)return url.href;}catch{}}
-  if(/^[a-z]:\\.*\.(?:html?|shtml|xhtml?|xht)$/i.test(arg))return pathToFileURL(arg).href;
+  const clean = typeof arg === 'string' ? arg.trim().replace(/^["']|["']$/g, '') : '';
+  if(!clean) continue;
+  if(/^https?:\/\//i.test(clean)){try{const url=new URL(clean);if(!url.username&&!url.password)return url.href;}catch{}}
+  if(/^[a-z]:[\\/].*\.(?:html?|shtml|xhtml?|xht|pdf|svg|webp|xml)$/i.test(clean)){
+    try { return pathToFileURL(clean).href; } catch {}
+  }
  }
  return null;
 }

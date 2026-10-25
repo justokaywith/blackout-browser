@@ -802,8 +802,14 @@ function guardRemoteContents(context, contents) {
         return;
       }
       const parsed = new URL(targetUrl);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:' && parsed.protocol !== 'file:') {
         event.preventDefault();
+        return;
+      }
+      if (parsed.protocol === 'file:') {
+        if (!/\.(?:html?|shtml|xhtml?|xht|pdf|svg|webp|xml|png|jpe?g|txt|json)$/i.test(parsed.pathname)) {
+          event.preventDefault();
+        }
         return;
       }
       if (parsed.protocol === 'http:') {
@@ -824,7 +830,7 @@ function guardRemoteContents(context, contents) {
         return;
       }
       const parsed = new URL(targetUrl);
-      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:' && parsed.protocol !== 'file:') {
         event.preventDefault();
       }
     } catch {

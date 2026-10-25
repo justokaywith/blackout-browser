@@ -5,4 +5,7 @@ test('Windows external web links are opened without interpreting switches as URL
  assert.equal(externalTarget(['app.exe','javascript:alert(1)']),null);
  assert.equal(externalTarget(['app.exe','https://user:password@example.com']),null);
  assert.equal(externalTarget(['app.exe','--inspect=9229']),null);
+ assert.match(externalTarget(['app.exe','C:\\docs\\whitepaper.pdf']),/^file:\/\/\/C:\/docs\/whitepaper\.pdf$/i);
+ assert.match(externalTarget(['app.exe','C:\\pages\\index.html']),/^file:\/\/\/C:\/pages\/index\.html$/i);
+ assert.match(externalTarget(['app.exe','C:\\images\\vector.svg']),/^file:\/\/\/C:\/images\/vector\.svg$/i);
 });
