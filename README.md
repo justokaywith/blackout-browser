@@ -1,8 +1,8 @@
 <div align="center">
-  <h1>Blackout Browser</h1>
-  <p><strong>The Sovereign Dark Desktop Browser for Deep Focus &amp; Heavy Multitasking</strong></p>
+  <h1>Blackout Browser by Pactuno</h1>
+  <p><strong>The Sovereign Dark Desktop Browser by Pactuno for Deep Focus &amp; Heavy Multitasking</strong></p>
   <p>
-    Built with Electron and Chromium for Windows. Minimalist, privacy-first, with native vertical workflows and local media caching.
+    Built with Electron and Chromium for Windows. Minimalist, privacy-first, with native vertical workflows and local media caching. Part of the Pactuno ecosystem.
   </p>
   <p>
     <a href="https://pactuno.online/downloads/Blackout-Setup.exe"><strong>Download for Windows (.exe)</strong></a>
@@ -29,7 +29,7 @@
 
 Modern mainstream browsers have become heavy notification centers packed with sponsored content, forced telemetry, and cluttered horizontal tab strips that disappear when you open more than fifteen links.
 
-**Blackout Browser** was built from the ground up for researchers, engineers, and power users who need:
+**Blackout Browser by Pactuno** was built from the ground up for researchers, engineers, and power users who need:
 * **Deep Work & Zero Clutter:** A bespoke obsidian-dark aesthetic with zero promotional bloat.
 * **Resilient Tab Stacks:** Reorder, group, and instantly recover tabs and entire windows without session loss.
 * **Local Offline Media:** Integrated music player that theme-syncs with the window and caches real audio locally for offline focus.
