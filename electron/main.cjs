@@ -859,6 +859,7 @@ function guardRemoteContents(context, contents) {
             backgroundColor: '#ffffff',
             webPreferences: {
               session: context.browserSession,
+      plugins: true, // Chromium built-in PDF viewer.
               contextIsolation: true,
               nodeIntegration: false,
               sandbox: true
@@ -897,6 +898,7 @@ function createTab(context, target = '') {
   const view = new WebContentsView({
     webPreferences: {
       session: context.browserSession,
+      plugins: true, // Chromium built-in PDF viewer.
       preload: path.join(__dirname,'privacy-preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,

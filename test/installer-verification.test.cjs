@@ -45,5 +45,5 @@ test('verified executable and package allow successful installation', async () =
   assert.equal(result.success, true); assert.equal(registered, true);
   assert.equal(shortcut.appUserModelId,'online.pactuno.blackout');assert.ok(shortcut.toastActivatorClsid);assert.equal(opened,null);
 });
-test('default-browser choice opens the registered Windows app without claiming automatic success',async()=>{const {result,opened}=await attempt('default');assert.equal(result.success,true);assert.equal(result.defaultSettingsOpened,true);assert.equal(opened,'ms-settings:defaultapps?registeredAppUser=BlackoutBrowser');});
+test('default-browser choice opens the registered Windows app without claiming automatic success',async()=>{const {result,opened}=await attempt('default');assert.equal(result.success,true,JSON.stringify(result));assert.equal(result.defaultSettingsOpened,true);assert.equal(opened,'ms-settings:defaultapps?registeredAppUser=BlackoutBrowser');});
 test('notification shortcut registration failure is surfaced',async()=>{const {result}=await attempt('shortcut-failure');assert.equal(result.success,false);assert.match(result.error,/notification shortcut/);});
