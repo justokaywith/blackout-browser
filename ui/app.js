@@ -361,7 +361,7 @@ function updateStarIcon(){
 function favoriteIconUrl(value){
   try{
     const url=new URL(value);
-    return `blackout://app/favicon?url=${encodeURIComponent(url.href)}`;
+    return `blackout://app/favicon?url=${encodeURIComponent(url.origin)}`;
   }catch{return '';}
 }
 
@@ -409,14 +409,7 @@ function renderFavorites(items,writable){
       bIcon.className = 'bookmark-icon';
       bIcon.alt = '';
       bIcon.src = favoriteIconUrl(item.url);
-      bIcon.onerror = () => {
-        bIcon.remove();
-        const fb = document.createElement('span');
-        fb.className = 'bookmark-fallback-icon';
-        fb.textContent = (item.title || '★').charAt(0).toUpperCase();
-        fb.style.color = item.color || 'var(--accent)';
-        bItem.prepend(fb);
-      };
+      bIcon.onerror = () => { bIcon.onerror=null; bIcon.src='./site-globe.svg'; };
       bItem.append(bIcon);
 
       const bTitle = document.createElement('span');
@@ -458,17 +451,7 @@ function renderFavorites(items,writable){
       sIcon.className = 'settings-bookmark-icon';
       sIcon.alt = '';
       sIcon.src = favoriteIconUrl(item.url);
-      sIcon.onerror = () => {
-        sIcon.remove();
-        const fb = document.createElement('span');
-        fb.className = 'favorite-badge';
-        fb.style.width = '24px';
-        fb.style.height = '24px';
-        fb.style.fontSize = '12px';
-        fb.textContent = (item.title || '★').charAt(0).toUpperCase();
-        fb.style.color = item.color || 'var(--accent)';
-        sInfo.prepend(fb);
-      };
+      sIcon.onerror = () => { sIcon.onerror=null; sIcon.src='./site-globe.svg'; };
       sInfo.append(sIcon);
 
       const sMeta = document.createElement('div');
@@ -524,13 +507,13 @@ function renderFavorites(items,writable){
       iconBadge.className = 'favorite-badge';
       let hostName = item.url;
       try { hostName = new URL(item.url).hostname.replace(/^www\./, ''); } catch {}
-      iconBadge.textContent = (item.title || hostName || '★').charAt(0).toUpperCase();
+      iconBadge.textContent = '';
       iconBadge.style.color = item.color || 'var(--accent)';
       const iconImage=document.createElement('img');
       iconImage.className='favorite-icon';
       iconImage.alt='';
       iconImage.src=favoriteIconUrl(item.url);
-      iconImage.onerror=()=>{iconImage.remove();iconBadge.classList.add('favorite-fallback');};
+      iconImage.onerror=()=>{iconImage.onerror=null;iconImage.src='./site-globe.svg';iconBadge.classList.add('favorite-fallback');};
       iconImage.onload=()=>iconBadge.classList.add('has-favicon');
       if(iconImage.src)iconBadge.append(iconImage);
 
@@ -1006,7 +989,7 @@ function renderTabs(state){
     icon.className='tab-icon';
     icon.alt='';
     icon.src = tab.url ? favoriteIconUrl(tab.url) : './blackout-mark.svg';
-    icon.onerror = () => { icon.src = './blackout-mark.svg'; };
+    icon.onerror = () => { icon.onerror=null;icon.src = './site-globe.svg'; };
     icon.draggable=false;icon.addEventListener('dblclick',()=>window.blackout?.tab('close',tab.id));
     const select=document.createElement('button');
     select.className='tab-select';

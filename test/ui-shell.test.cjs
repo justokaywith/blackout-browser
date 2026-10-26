@@ -27,10 +27,10 @@ test('new tab carries the approved motion system and favorites', () => {
 
 test('favorites request each saved site favicon and retain an initial fallback', () => {
   const js = read('ui/app.js');
-  const main = read('electron/main.cjs');
+  const main = read('electron/favicons.cjs');
   assert.match(js, /function favoriteIconUrl/);
   assert.match(js, /blackout:\/\/app\/favicon/);
-  assert.match(main, /new URL\('\/favicon\.ico', source\.origin\)/);
+  assert.match(main, /'\/favicon\.ico'/);
   assert.match(js, /iconImage\.onerror/);
   assert.match(js, /favorite-fallback/);
 });
@@ -51,7 +51,7 @@ test('address security button opens live site data, permissions, and cookie deta
   assert.match(main, /browser:site-info-popup/);
   assert.match(main, /setPermissionRequestHandler/);
   assert.match(main, /pathname === '\/favicon'/);
-  assert.match(main, /new URL\('\/favicon\.ico', source\.origin\)/);
+  assert.match(main, /resolveFavicon\(url.searchParams.get/);
 });
 
 test('appearance stores theme surface and motion independently', () => {
@@ -73,7 +73,7 @@ test('settings exposes the ten approved sections without false protection claims
 
 test('package and visible about copy identify v0.2', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.version, '0.2.36');
+  assert.equal(pkg.version, '0.2.37');
   assert.ok(read('ui/index.html').includes('Blackout '+pkg.version));
 });
 

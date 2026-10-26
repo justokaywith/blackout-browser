@@ -1,6 +1,8 @@
 const closedWindows=require('./closed-windows.cjs');
 const { app, BrowserWindow, WebContentsView, ipcMain, protocol, session, net, Menu, MenuItem, clipboard, dialog, shell } = require('electron');
 const fs = require('node:fs');
+const {createFaviconResolver}=require('./favicons.cjs');
+const resolveFavicon=createFaviconResolver((...args)=>net.fetch(...args));
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { randomUUID } = require('node:crypto');
@@ -120,6 +122,7 @@ const UI_FILES = new Map([
   ['/pip-3d.webp', ['pip-3d.webp', 'image/webp']],
   ['/blackout-mark.svg', ['blackout-mark.svg', 'image/svg+xml; charset=utf-8']],
   ['/crash-report.html', ['crash-report.html', 'text/html; charset=utf-8']],
+  ['/site-globe.svg', ['site-globe.svg', 'image/svg+xml; charset=utf-8']],
   ['/favorites-layout.js', ['favorites-layout.js', 'application/javascript; charset=utf-8']],
   ['/favorites-layout.css', ['favorites-layout.css', 'text/css; charset=utf-8']],
   ['/splash.html', ['splash.html', 'text/html; charset=utf-8']],
@@ -2504,26 +2507,7 @@ app.whenReady().then(async () => {
         }
         return new Response('Not found', { status: 404 });
       }
-      if (pathname === '/favicon') {
-        const target = url.searchParams.get('url') || '';
-        let source;
-        try { source = new URL(target); } catch { return new Response('Not found', { status: 404 }); }
-        if (source.protocol !== 'https:' || source.username || source.password) return new Response('Not found', { status: 404 });
-        try {
-          const icon = new URL('/favicon.ico', source.origin);
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2500);
-          const response = await net.fetch(icon.href, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          const type = response.headers.get('content-type') || '';
-          if (!response.ok || !/^image\/(?:png|x-icon|vnd\.microsoft\.icon|svg\+xml|webp|jpeg)/i.test(type)) return new Response('Not found', { status: 404 });
-          const body = await response.arrayBuffer();
-          if (body.byteLength > 512 * 1024) return new Response('Not found', { status: 404 });
-          return new Response(body, { headers: { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400', 'Referrer-Policy': 'no-referrer' } });
-        } catch {
-          return new Response('Not found', { status: 404 });
-        }
-      }
+      if (pathname === '/favicon') return resolveFavicon(url.searchParams.get('url')||'');
       const asset = UI_FILES.get(pathname);
       if (!asset) return new Response('Not found', { status: 404 });
       const file = path.join(__dirname, '..', 'ui', asset[0]);
