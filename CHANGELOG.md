@@ -1,3 +1,7 @@
+# 0.2.38
+
+- Center bookmark overflow arrows using fixed-size SVG chevrons, independent of font baseline.
+
 # Changelog
 
 ## 0.2.32 — 2026-10-25

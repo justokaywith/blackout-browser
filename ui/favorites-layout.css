@@ -20,3 +20,7 @@
 @media(prefers-reduced-motion:reduce){.bookmarks-list{scroll-behavior:auto}}
 
 .favorite-badge{display:grid!important;place-items:center!important;overflow:hidden!important}.favorite-badge .favorite-icon{display:block!important;grid-area:1/1;position:static!important;margin:0!important;flex-shrink:0}.favorite-badge.has-favicon{background:#fff!important}.bookmark-icon{background:#fff;border-radius:3px}.tab-icon{background:#fff;border-radius:4px}
+
+/* Geometry, rather than a font baseline, centers the overflow chevrons. */
+.bookmark-scroll{display:flex;align-items:center;justify-content:center;line-height:1;align-self:center;box-sizing:border-box}
+.bookmark-scroll svg{display:block;width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}

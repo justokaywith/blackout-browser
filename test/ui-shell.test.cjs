@@ -73,7 +73,7 @@ test('settings exposes the ten approved sections without false protection claims
 
 test('package and visible about copy identify v0.2', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.version, '0.2.37');
+  assert.equal(pkg.version, '0.2.38');
   assert.ok(read('ui/index.html').includes('Blackout '+pkg.version));
 });
 
