@@ -120,6 +120,8 @@ const UI_FILES = new Map([
   ['/pip-3d.webp', ['pip-3d.webp', 'image/webp']],
   ['/blackout-mark.svg', ['blackout-mark.svg', 'image/svg+xml; charset=utf-8']],
   ['/crash-report.html', ['crash-report.html', 'text/html; charset=utf-8']],
+  ['/favorites-layout.js', ['favorites-layout.js', 'application/javascript; charset=utf-8']],
+  ['/favorites-layout.css', ['favorites-layout.css', 'text/css; charset=utf-8']],
   ['/splash.html', ['splash.html', 'text/html; charset=utf-8']],
   ['/splash.css', ['splash.css', 'text/css; charset=utf-8']],
   ['/splash.js', ['splash.js', 'application/javascript; charset=utf-8']],

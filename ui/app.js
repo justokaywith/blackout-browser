@@ -327,6 +327,7 @@ async function refreshFavorites(){
 }
 
 let currentFavorites = [];
+let favoritesPage=0;
 
 function updateStarIcon(){
   const star = $('#favorite-current');
@@ -367,6 +368,11 @@ function favoriteIconUrl(value){
 function renderFavorites(items,writable){
   favoritesWritable=writable;
   currentFavorites = Array.isArray(items) ? items : [];
+  const page=window.BlackoutFavoriteLayout.favoritePage(currentFavorites,favoritesPage);favoritesPage=page.page;
+  const controls=$('#favorites-pagination');if(controls)controls.hidden=page.pages<=1;
+  if($('#favorites-range'))$('#favorites-range').textContent=page.end?String(page.start+1)+'–'+page.end+' of '+currentFavorites.length+' favorites':'No favorites';
+  if($('#favorites-prev'))$('#favorites-prev').disabled=page.page===0;
+  if($('#favorites-more'))$('#favorites-more').disabled=page.page===page.pages-1;
   updateStarIcon();
   const grid=$('#favorites-grid');
   if (grid) grid.replaceChildren();
@@ -391,7 +397,7 @@ function renderFavorites(items,writable){
     }
     return;
   }
-  for(const item of currentFavorites){
+  for(const [favoriteIndex,item] of currentFavorites.entries()){
     // 1. Bookmarks Bar Item
     if (bookmarksList) {
       const bItem = document.createElement('button');
@@ -504,9 +510,9 @@ function renderFavorites(items,writable){
     }
 
     // 3. New Tab Favorites Grid
-    if (grid) {
+    if (grid && favoriteIndex>=page.start && favoriteIndex<page.end) {
       const card=document.createElement('article');
-      card.className='favorite-card';
+      card.className='favorite-card';card.title=item.title+'\n'+item.url;
       
 
       const open=document.createElement('button');
@@ -565,6 +571,8 @@ function renderFavorites(items,writable){
     }
   }
 }
+
+for(const [id,step]of [['favorites-prev',-1],['favorites-more',1]])$('#'+id)?.addEventListener('click',()=>{favoritesPage+=step;renderFavorites(currentFavorites,favoritesWritable)});
 
 let editingFavoriteId = null;
 function openFavoriteDialog(item){

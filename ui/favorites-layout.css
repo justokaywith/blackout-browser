@@ -1,0 +1,20 @@
+/* Compact, paged favorites and readable bookmark overflow. */
+.bookmarks-bar{overflow:hidden!important;gap:6px!important;padding-inline:8px!important}
+.bookmarks-list{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth}
+.bookmarks-list::-webkit-scrollbar{display:none}
+.bookmark-item{flex:0 0 auto!important;min-width:100px;max-width:170px!important;padding-inline:9px!important}
+.bookmark-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bookmark-scroll{flex:0 0 26px;width:26px;height:26px;padding:0;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--ink);display:grid;place-items:center;cursor:pointer;font-size:19px}
+.bookmark-scroll[hidden],.favorites-pagination[hidden]{display:none!important}.bookmark-scroll:disabled{opacity:.35;cursor:default}
+.bookmark-scroll:focus-visible,.favorites-pagination button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.favorites-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:10px!important;margin-top:12px!important}
+.favorite-card{min-height:76px!important;padding:8px!important;border:1px solid var(--line)!important;border-radius:13px!important;background:var(--panel)!important;transform:none!important}
+.favorite-open{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;padding:7px 10px 7px 2px!important;min-height:58px!important;text-align:left!important;width:100%!important}
+.favorite-badge{width:34px!important;height:34px!important;min-width:34px!important;flex:0 0 34px!important;margin:0!important;padding:0!important;border-radius:10px!important;font-size:19px!important;box-shadow:none!important}
+.favorite-icon{width:24px!important;height:24px!important}.favorite-content{min-width:0!important;text-align:left!important}
+.favorite-content b{font-size:12px!important;line-height:1.4!important}.favorite-content small{font-size:10px!important;margin-top:3px!important}
+.favorite-card .remove-favorite{right:2px!important;top:2px!important;width:20px!important;height:20px!important;border-radius:6px!important;font-size:13px!important}
+.favorites-head{margin-top:26px!important}.favorites-pagination{display:flex;align-items:center;justify-content:flex-end;gap:14px;margin-top:14px}
+.favorites-pagination span{font-size:11px;color:var(--muted);margin-right:auto}.favorites-pagination button{min-height:34px;padding:7px 14px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:12px;background:var(--panel);color:var(--ink);cursor:pointer}
+.favorites-pagination button:disabled{opacity:.4;cursor:default}
+@media(prefers-reduced-motion:reduce){.bookmarks-list{scroll-behavior:auto}}
