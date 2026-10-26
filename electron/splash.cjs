@@ -1,125 +1,34 @@
-/**
- * electron/splash.cjs — First-launch splash screen for Blackout Browser.
- *
- * Shows the atom-death animation in a frameless window, resolves when the
- * animation finishes or the user clicks/presses a key to skip.
- *
- * Usage:
- *   const { showSplashIfFirstLaunch } = require('./splash.cjs');
- *   await showSplashIfFirstLaunch();   // resolves immediately if not first launch
- */
-
-const { BrowserWindow, screen } = require('electron');
-const path = require('node:path');
-const fs = require('node:fs');
-const { pathToFileURL } = require('node:url');
-
-/**
- * Return the path to the first-launch marker.
- * The NSIS installer writes this to  <installDir>/resources/.first-launch.
- * As a fallback for dev / portable builds we also check userData.
- */
-function markerPath() {
-  // In a packaged app, resources path contains .first-launch from the installer
-  const installerMarker = path.join(process.resourcesPath, '.first-launch');
-  if (fs.existsSync(installerMarker)) return installerMarker;
-  // Fallback: use a userData flag (for dev mode / first-ever run)
-  const { app } = require('electron');
-  return path.join(app.getPath('userData'), '.first-launch');
+const {BrowserWindow,screen,ipcMain,app}=require('electron');
+const path=require('node:path'),fs=require('node:fs'),{pathToFileURL}=require('node:url');
+const shownFlag=()=>path.join(app.getPath('userData'),'.splash-shown');
+function markSplashShown(){
+ for(const marker of [path.join(process.resourcesPath,'.first-launch'),path.join(app.getPath('userData'),'.first-launch')])try{fs.unlinkSync(marker)}catch{}
+ try{fs.writeFileSync(shownFlag(),'1','utf8')}catch{}
 }
-
-function isFirstLaunch() {
-  const marker = markerPath();
-  if (fs.existsSync(marker)) return true;
-  // If neither marker exists this is the very first run in dev mode — treat as first launch
-  const { app } = require('electron');
-  const doneFlag = path.join(app.getPath('userData'), '.splash-shown');
-  return !fs.existsSync(doneFlag);
+function showSplash(){
+ return new Promise(resolve=>{
+  const area=screen.getPrimaryDisplay().workArea,width=Math.min(560,area.width),height=Math.min(480,area.height);
+  const win=new BrowserWindow({width,height,x:area.x+Math.round((area.width-width)/2),y:area.y+Math.round((area.height-height)/2),frame:false,resizable:false,movable:true,minimizable:false,maximizable:false,skipTaskbar:false,backgroundColor:'#101114',show:false,
+   webPreferences:{preload:path.join(__dirname,'splash-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,webSecurity:true,webviewTag:false}});
+  let finished=false,timer;
+  const complete=()=>{
+   if(finished)return;finished=true;clearTimeout(timer);ipcMain.removeListener('splash:done',onDone);
+   markSplashShown();
+   if(!win.isDestroyed())win.destroy();
+   resolve();
+  };
+  const onDone=event=>{if(event.sender===win.webContents)complete()};
+  ipcMain.on('splash:done',onDone);
+  win.once('closed',complete);
+  win.once('unresponsive',complete);
+  win.webContents.once('render-process-gone',complete);
+  win.webContents.once('did-fail-load',complete);
+  win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
+  win.webContents.on('will-navigate',event=>event.preventDefault());
+  timer=setTimeout(complete,4000);
+  win.once('ready-to-show',()=>{if(!finished)win.show()});
+  win.loadURL(pathToFileURL(path.join(__dirname,'..','ui','splash.html')).href).catch(complete);
+ });
 }
-
-function markSplashShown() {
-  // Remove installer marker if present
-  try { fs.unlinkSync(path.join(process.resourcesPath, '.first-launch')); } catch { /* ignore */ }
-  // Write persistent "shown" flag in userData
-  const { app } = require('electron');
-  const doneFlag = path.join(app.getPath('userData'), '.splash-shown');
-  try { fs.writeFileSync(doneFlag, '1', 'utf8'); } catch { /* ignore */ }
-}
-
-/**
- * Show the splash screen. Returns a promise that resolves once the splash
- * animation is done (or the user dismissed it).
- */
-function showSplash() {
-  return new Promise((resolve) => {
-    const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
-    const splashW = 800;
-    const splashH = 500;
-
-    const win = new BrowserWindow({
-      width: splashW,
-      height: splashH,
-      x: Math.round((screenW - splashW) / 2),
-      y: Math.round((screenH - splashH) / 2),
-      frame: false,
-      resizable: false,
-      movable: false,
-      minimizable: false,
-      maximizable: false,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-      transparent: false,
-      backgroundColor: '#090a11',
-      show: false,
-      webPreferences: {
-        preload: path.join(__dirname, 'splash-preload.cjs'),
-        contextIsolation: true,
-        nodeIntegration: false,
-        sandbox: false,
-        webSecurity: true,
-        webviewTag: false
-      }
-    });
-
-    let resolved = false;
-    const done = () => {
-      if (resolved) return;
-      resolved = true;
-      markSplashShown();
-      // Fade is handled by the HTML; give it a moment then destroy
-      setTimeout(() => {
-        if (!win.isDestroyed()) win.destroy();
-        resolve();
-      }, 100);
-    };
-
-    // Safety timeout — never block the browser from starting for more than 12 s
-    const safetyTimer = setTimeout(done, 12000);
-
-    // We don't use ipc handlers — we listen for 'splash:done' on the webContents
-    const { ipcMain } = require('electron');
-    const handler = () => { clearTimeout(safetyTimer); done(); };
-    ipcMain.once('splash:done', handler);
-
-    win.once('closed', () => {
-      ipcMain.removeListener('splash:done', handler);
-      clearTimeout(safetyTimer);
-      if (!resolved) { resolved = true; resolve(); }
-    });
-
-    // Load the splash HTML from ui/splash.html
-    const splashFile = path.join(__dirname, '..', 'ui', 'splash.html');
-    win.loadURL(pathToFileURL(splashFile).toString());
-    win.once('ready-to-show', () => win.show());
-  });
-}
-
-/**
- * Show splash only on first launch, otherwise resolve immediately.
- */
-async function showSplashIfFirstLaunch() {
-  if (!isFirstLaunch()) return;
-  await showSplash();
-}
-
-module.exports = { showSplashIfFirstLaunch, showSplash };
+async function showSplashIfFirstLaunch(){if(fs.existsSync(shownFlag()))return;await showSplash()}
+module.exports={showSplash,showSplashIfFirstLaunch};

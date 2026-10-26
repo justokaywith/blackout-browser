@@ -121,6 +121,8 @@ const UI_FILES = new Map([
   ['/blackout-mark.svg', ['blackout-mark.svg', 'image/svg+xml; charset=utf-8']],
   ['/crash-report.html', ['crash-report.html', 'text/html; charset=utf-8']],
   ['/splash.html', ['splash.html', 'text/html; charset=utf-8']],
+  ['/splash.css', ['splash.css', 'text/css; charset=utf-8']],
+  ['/splash.js', ['splash.js', 'application/javascript; charset=utf-8']],
   ['/protection-popup.html', ['protection-popup.html', 'text/html; charset=utf-8']],
   ['/protection-popup.js', ['protection-popup.js', 'application/javascript; charset=utf-8']],
   ['/extensions-popup.html', ['extensions-popup.html', 'text/html; charset=utf-8']],
@@ -2574,10 +2576,12 @@ app.on('before-quit', (event) => {
   log('app before-quit event, quitting=' + quitting);
   if (quitting) return;
   quitting = true;
+  if (!isAppReady && !quitting) return; // The first-launch splash closes before browser creation.
   terminateAppImmediately();
 });
 
 app.on('window-all-closed', () => {
   log('app window-all-closed, contexts count=' + contexts.size + ', isAppReady=' + isAppReady);
+  if (!isAppReady && !quitting) return; // Splash closing is not a browser exit.
   terminateAppImmediately();
 });
