@@ -856,7 +856,7 @@ function guardRemoteContents(context, contents) {
           overrideBrowserWindowOptions: {
             parent: context.window,
             autoHideMenuBar: true,
-            backgroundColor: '#0f1019',
+            backgroundColor: '#ffffff',
             webPreferences: {
               session: context.browserSession,
               contextIsolation: true,
@@ -907,7 +907,8 @@ function createTab(context, target = '') {
     }
   });
   view.webContents.setUserAgent(getCleanUserAgent());
-  view.setBackgroundColor('#090a11');
+  // Website canvases must not inherit the dark browser chrome.
+  view.setBackgroundColor('#ffffff');
   installKeyboardShortcuts(view.webContents, context);
   const tab = { id, view, url: target, title: target || 'New tab', loading: Boolean(target), audible: false };
   context.tabs.set(id, tab);

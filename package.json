@@ -1,6 +1,6 @@
 {
   "name": "@pactuno/blackout-browser",
-  "version": "0.2.32",
+  "version": "0.2.33",
   "private": true,
   "description": "Early-access Pactuno Blackout Browser desktop shell",
   "main": "electron/main.cjs",

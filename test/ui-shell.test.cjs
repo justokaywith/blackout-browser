@@ -73,8 +73,8 @@ test('settings exposes the ten approved sections without false protection claims
 
 test('package and visible about copy identify v0.2', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.version, '0.2.32');
-  assert.match(read('ui/index.html'), /Blackout 0\.2\.32/);
+  assert.equal(pkg.version, '0.2.33');
+  assert.match(read('ui/index.html'), /Blackout 0\.2\.33/);
 });
 
 test('image context menu supports download, copy image, copy address, and open in new tab', () => {
