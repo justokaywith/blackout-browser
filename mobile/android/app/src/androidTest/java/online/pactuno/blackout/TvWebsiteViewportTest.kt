@@ -49,7 +49,7 @@ class TvWebsiteViewportTest {
      device.findObject(By.desc("Tabs")).click();device.wait(Until.findObject(By.text("TV viewport fixture")),5000).click()
      assertNotNull(device.wait(Until.findObject(By.text("TV website starts here")),10000))
      device.pressMenu();device.wait(Until.findObject(By.text("Address bar")),5000).click()
-     assertTrue("TV Menu cannot return focus to address bar",device.wait(Until.findObject(By.clazz("android.widget.EditText")),5000).isFocused)
+     assertNotNull("TV Menu cannot return focus to address bar",device.wait(Until.findObject(By.clazz("android.widget.EditText").focused(true)),5000))
     }
    }
   } finally {server.close();context.getSharedPreferences("blackout_display",0).edit().clear().commit();device.executeShellCommand("wm size reset");device.executeShellCommand("wm density reset");device.unfreezeRotation()}
