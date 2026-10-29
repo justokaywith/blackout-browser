@@ -20,10 +20,12 @@ class TvViewportTest {
    device.executeShellCommand("wm density 160");device.setOrientationNatural()
    for(size in listOf("960x540","1280x720")){
     device.executeShellCommand("wm size $size")
+    // WindowManager applies display changes asynchronously; let launcher transitions settle before launch.
+    device.waitForIdle();android.os.SystemClock.sleep(2500)
     context.getSharedPreferences("blackout_desktop_ui",0).edit().clear().commit()
     context.getSharedPreferences("blackout_display",0).edit().clear().commit()
-    ActivityScenario.launch<android.app.Activity>(Intent(context,activityClass)).use{scenario->
-     assertNotNull(device.wait(Until.findObject(By.desc("Menu")),15000));device.waitForIdle()
+    ActivityScenario.launch<android.app.Activity>(Intent(context,activityClass).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)).use{scenario->
+     assertNotNull("Browser menu missing at $size",device.wait(Until.findObject(By.desc("Menu")),15000));device.waitForIdle()
      val safe=Rect()
      scenario.onActivity{activity->
       val root=(activity.findViewById<ViewGroup>(android.R.id.content)).getChildAt(0)
