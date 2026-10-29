@@ -1,0 +1,65 @@
+name: Blackout Android
+on:
+  push:
+    paths: ['mobile/**', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['mobile/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare debug signing and SDK
+        run: |
+          mkdir -p mobile/.local
+          keytool -genkeypair -keystore mobile/.local/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname CN=AndroidDebug,O=Android,C=US -validity 10000 -keyalg RSA -keysize 2048
+          chmod +x mobile/android/gradlew
+          sdkmanager 'platforms;android-35' 'build-tools;34.0.0'
+      - name: Unit tests, lint and instrumented APK build
+        working-directory: mobile/android
+        run: ./gradlew :app:testDebugUnitTest :app:lintRelease :app:assembleRelease :app:assembleDebug :app:assembleDebugAndroidTest --no-daemon
+      - name: Enable KVM for the isolated hosted emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Real Android browser journeys
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -no-audio -gpu swiftshader_indirect -no-boot-anim
+          script: bash mobile/android/run-device-tests.sh
+      - name: Collect screenshots
+        if: always()
+        run: |
+          mkdir -p android-qa
+          adb pull /sdcard/Android/data/online.pactuno.blackout.debug/files/ android-qa/ || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-qa
+          path: |
+            mobile/android/app/build/outputs/apk/release/
+            mobile/android/app/build/reports/
+            mobile/android/app/build/outputs/androidTest-results/
+            android-qa/

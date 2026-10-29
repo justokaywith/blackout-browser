@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BlackoutMobile" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Status Bar & Navigation Bar edge-to-edge -->
+        <item name="android:statusBarColor">@color/blackout_bg</item>
+        <item name="android:navigationBarColor">@color/blackout_bg</item>
+        <item name="android:windowBackground">@color/blackout_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="colorPrimary">@color/blackout_purple</item>
+        <item name="colorSecondary">@color/blackout_orange</item>
+    </style>
+</resources>
