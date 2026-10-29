@@ -65,7 +65,7 @@ class DownloadsActivity:AppCompatActivity(){
    }
    if(row.mime=="application/pdf"||row.title.endsWith(".pdf",true)){startActivity(Intent(this,PdfActivity::class.java).setData(uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));return}
    val mime=if(apk)"application/vnd.android.package-archive" else row.mime.takeIf{Regex("[a-zA-Z0-9.+*-]+/[a-zA-Z0-9.+*-]+").matches(it)}?:"application/octet-stream"
-   startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri,mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION).setClipData(ClipData.newRawUri("Downloaded file",uri)))
+   startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri,mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION).apply{clipData=ClipData.newRawUri("Downloaded file",uri)})
   }catch(_:ActivityNotFoundException){notice("The file is downloaded, but this box has no app that can open this file type. APKs need an Android package installer. Find the file in the device Download folder.")}
    catch(_:Exception){notice("This file is no longer available. Download it again, then open the completed entry.")}
  }
