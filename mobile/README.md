@@ -17,7 +17,7 @@ A native Android / Android TV edition of Blackout, aligned with the desktop brow
 
 Android8/API26+; isolated private sessions require Android9/API28+. The APK has no ABI-specific native libraries. Actual compatibility depends on the firmware, available memory and WebView version. Keep System WebView updated. PTCL/Samsung hardware acceptance is separate from emulator tests.
 
-Chrome desktop extensions, Windows WireGuard integration, Windows yt-dlp downloads, desktop window-management controls and Windows auto-updates are not Android features. Tracker blocking is a small host list, not comprehensive protection. Private mode does not hide activity from websites or networks; downloaded files remain. Local music does not include a desktop YouTube extraction backend or guaranteed background playback after the app is stopped. No Tor/VPN/anonymity claims.
+Chrome desktop extensions, Windows WireGuard integration, Windows yt-dlp downloads, desktop window-management controls and Windows auto-updates are not Android features. Tracker blocking is a small host list, not comprehensive protection. Private mode does not hide activity from websites or networks; downloaded files remain. The system download service receives no browser session cookies. Session-protected or blob downloads need a website-provided downloadable link. Local music does not include a desktop YouTube extraction backend or guaranteed background playback after the app is stopped. No Tor/VPN/anonymity claims.
 
 ## Build
 
