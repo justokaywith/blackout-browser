@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="21.6"
+        android:translateY="21.6">
+        <!-- Nucleus Glow & Core -->
+        <path
+            android:fillColor="#9a7aff"
+            android:pathData="M54,54m-12,0a12,12 0,1,1 24,0a12,12 0,1,1 -24,0" />
+        <path
+            android:fillColor="#f4f1ff"
+            android:pathData="M54,54m-6,0a6,6 0,1,1 12,0a6,6 0,1,1 -12,0" />
+
+        <!-- Orbit Ring 1 (Tilted 32 deg) -->
+        <group
+            android:rotation="32"
+            android:pivotX="54"
+            android:pivotY="54">
+            <path
+                android:strokeColor="#9a7aff"
+                android:strokeWidth="2.5"
+                android:strokeAlpha="0.75"
+                android:pathData="M54,32 C74,32 90,42 90,54 C90,66 74,76 54,76 C34,76 18,66 18,54 C18,42 34,32 54,32 Z" />
+            <!-- Electron 1 -->
+            <path
+                android:fillColor="#ff684d"
+                android:pathData="M90,54m-4,0a4,4 0,1,1 8,0a4,4 0,1,1 -8,0" />
+        </group>
+
+        <!-- Orbit Ring 2 (Tilted -32 deg) -->
+        <group
+            android:rotation="-32"
+            android:pivotX="54"
+            android:pivotY="54">
+            <path
+                android:strokeColor="#ff684d"
+                android:strokeWidth="2.5"
+                android:strokeAlpha="0.75"
+                android:pathData="M54,32 C74,32 90,42 90,54 C90,66 74,76 54,76 C34,76 18,66 18,54 C18,42 34,32 54,32 Z" />
+            <!-- Electron 2 -->
+            <path
+                android:fillColor="#77e4c4"
+                android:pathData="M18,54m-4,0a4,4 0,1,1 8,0a4,4 0,1,1 -8,0" />
+        </group>
+    </group>
+</vector>

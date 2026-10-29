@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Blackout Obsidian System Palette -->
+    <color name="blackout_bg">#07080e</color>
+    <color name="blackout_bg_secondary">#0e101b</color>
+    <color name="blackout_purple">#9a7aff</color>
+    <color name="blackout_orange">#ff684d</color>
+    <color name="blackout_teal">#77e4c4</color>
+    <color name="blackout_text">#f4f1ff</color>
+    <color name="blackout_muted">#828399</color>
+    <color name="blackout_chin_bg">#0a0b12</color>
+    <color name="blackout_chin_private_bg">#0f0b1a</color>
+    <color name="blackout_line">#1c1d2e</color>
+    <color name="blackout_omnibar_bg">#121320</color>
+</resources>

@@ -1,0 +1,53 @@
+package online.pactuno.blackout
+import android.content.Intent
+import android.webkit.CookieManager
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.*
+import org.junit.*
+import org.junit.Assert.*
+import org.junit.runner.RunWith
+import java.io.File
+import java.net.ServerSocket
+import java.util.concurrent.LinkedBlockingQueue
+import kotlin.concurrent.thread
+
+@RunWith(AndroidJUnit4::class)
+class BrowserJourneyTest{
+ private val instrumentation=InstrumentationRegistry.getInstrumentation()
+ private val context get()=instrumentation.targetContext
+ private val device get()=UiDevice.getInstance(instrumentation)
+ private lateinit var server:ServerSocket
+ private val requests=LinkedBlockingQueue<String>()
+ private val url get()="http://127.0.0.1:${server.localPort}/"
+ @Before fun setup(){
+  context.getSharedPreferences("blackout_desktop_ui",0).edit().clear().commit()
+  server=ServerSocket(0)
+  thread(isDaemon=true){while(!server.isClosed)try{server.accept().use{s->s.soTimeout=5000;val reader=s.getInputStream().bufferedReader();val lines=mutableListOf<String>();while(true){val line=reader.readLine()?:break;if(line.isEmpty())break;lines.add(line)};requests.offer(lines.joinToString("\n"));val html="<html><head><title>QA fixture</title></head><body><h1>Fixture ready</h1><p id='bridge'></p><script>document.getElementById('bridge').textContent='nativeBridge='+typeof window.BlackoutNative;</script></body></html>";val bytes=html.toByteArray();s.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: ${bytes.size}\r\nConnection: close\r\n\r\n").toByteArray());s.getOutputStream().write(bytes)}}catch(_:Exception){}}
+  context.startActivity(Intent(context,BrowserActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+  assertNotNull(device.wait(Until.findObject(By.text("Favourites")),20000))
+ }
+ @After fun stop(){server.close();device.pressHome()}
+ private fun click(text:String){val node=device.wait(Until.findObject(By.text(text)),12000);assertNotNull("Missing button $text",node);node.click();device.waitForIdle()}
+ private fun menu(){device.wait(Until.findObject(By.desc("Menu")),10000).click();device.waitForIdle()}
+ private fun address(value:String){val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue(fields.isNotEmpty());fields.first().setText(value);device.pressEnter();device.waitForIdle()}
+ @Test fun standardTabsNavigationAndNoNativeBridge(){
+  address(url);assertNotNull(device.wait(Until.findObject(By.text("nativeBridge=undefined")),15000))
+  device.findObject(By.desc("New tab")).click();assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
+  menu();click("Reopen closed tab");device.pressBack()
+  device.takeScreenshot(File(context.getExternalFilesDir(null),"qa-standard.png"))
+ }
+ @Test fun privateHomeButtonsAndStorageIsolation(){
+  instrumentation.runOnMainSync{CookieManager.getInstance().setCookie(url,"blackout_qa=standard; Path=/");CookieManager.getInstance().flush()}
+  menu();click("New private session");assertNotNull(device.wait(Until.findObject(By.text("PRIVATE")),20000))
+  device.takeScreenshot(File(context.getExternalFilesDir(null),"qa-private-home.png"))
+  click("Manage");assertNotNull(device.wait(Until.findObject(By.text("Bookmarks")),5000));device.pressBack()
+  click("Open PDF");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack();assertNotNull(device.wait(Until.findObject(By.text("PRIVATE")),10000))
+  click("Music");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack()
+  val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue("Native address and homepage search must exist",fields.size>=2);fields.last().setText(url);device.pressEnter()
+  assertNotNull(device.wait(Until.findObject(By.text("Fixture ready")),15000))
+  val request=requests.poll(15,java.util.concurrent.TimeUnit.SECONDS);assertNotNull(request);assertFalse("Private session received standard cookies",request!!.contains("blackout_qa=standard"))
+  menu();click("Close private session");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
+  instrumentation.runOnMainSync{assertTrue(CookieManager.getInstance().getCookie(url).orEmpty().contains("blackout_qa=standard"))}
+ }
+}

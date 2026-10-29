@@ -143,3 +143,8 @@ blackout-browser/
 * [Contributing Guide](CONTRIBUTING.md)
 * [Project Roadmap](ROADMAP.md)
 * [Code of Conduct](CODE_OF_CONDUCT.md)
+
+
+## Android / Android TV
+
+The separate Android early-access edition lives in [mobile/](mobile/). It reuses Blackout branding and core workflows with native Android tabs and System WebView. APKs are separate from Windows installers. See the mobile README for actual features, private-mode requirements and desktop-only limitations. Android validation is tracked by the Blackout Android workflow; do not assume Windows feature or security parity.

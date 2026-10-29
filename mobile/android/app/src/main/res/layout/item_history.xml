@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/history_item_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp"
+    android:gravity="center_vertical"
+    android:background="?attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/tv_history_icon"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:text="🌐"
+        android:textSize="18sp"
+        android:background="@drawable/bg_tab_box" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="14dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_history_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Page Title"
+            android:textColor="@color/blackout_text"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_history_url"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="https://example.com"
+                android:textColor="@color/blackout_muted"
+                android:textSize="12sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tv_history_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Just now"
+                android:textColor="#5a5b70"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/btn_delete_history_item"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:padding="8dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_close"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Remove from history" />
+</LinearLayout>

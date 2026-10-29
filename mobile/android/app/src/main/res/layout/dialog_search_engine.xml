@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/blackout_bg"
+    android:padding="20dp">
+
+    <!-- Handle Bar -->
+    <View
+        android:layout_width="38dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="#2E2B45"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Header: Title and Close -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp">
+
+        <TextView
+            android:id="@+id/tv_search_engine_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Default Search Engine"
+            android:textColor="@color/blackout_text"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true" />
+
+        <ImageView
+            android:id="@+id/btn_close_search_engine_sheet"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_close"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="Close" />
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Used when searching from the omnibar or new tab page."
+        android:textColor="@color/blackout_muted"
+        android:textSize="12sp"
+        android:layout_marginBottom="14dp" />
+
+    <!-- Search Engine List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_search_engine_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false" />
+
+</LinearLayout>
