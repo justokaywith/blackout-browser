@@ -27,22 +27,22 @@ class BrowserJourneyTest{
   context.startActivity(Intent(context,BrowserActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
   assertNotNull(device.wait(Until.findObject(By.text("Favourites")),20000))
  }
- @After fun stop(){server.close();device.pressHome()}
+ @After fun stop(){server.close()}
  private fun click(text:String){var node=device.wait(Until.findObject(By.text(text)),2500);for(i in 0..3){if(node!=null)break;device.swipe(device.displayWidth/2,device.displayHeight*8/10,device.displayWidth/2,device.displayHeight*3/10,30);node=device.wait(Until.findObject(By.text(text)),1500)};assertNotNull("Missing button $text",node);node.click();device.waitForIdle()}
  private fun menu(){device.wait(Until.findObject(By.desc("Menu")),10000).click();device.waitForIdle()}
  private fun address(value:String){val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue(fields.isNotEmpty());fields.first().click();fields.first().setText(value);device.pressEnter();device.waitForIdle()}
  @Test fun standardTabsNavigationAndNoNativeBridge(){
   address(url);assertNotNull(device.wait(Until.findObject(By.text("nativeBridge=undefined")),15000))
   device.findObject(By.desc("New tab")).click();assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
-  device.findObject(By.desc("Close New tab")).click();assertNotNull(device.wait(Until.findObject(By.text("Fixture ready")),10000));menu();click("Reopen closed tab");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
-  device.takeScreenshot(File(context.getExternalFilesDir(null),"qa-standard.png"))
+  device.wait(Until.findObject(By.desc("Close New tab")),5000).click();assertNotNull(device.wait(Until.findObject(By.text("Fixture ready")),10000));menu();click("Reopen closed tab");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
+  device.executeShellCommand("screencap -p /sdcard/blackout-qa-standard.png")
  }
  @Test fun privateHomeButtonsAndStorageIsolation(){
   instrumentation.runOnMainSync{CookieManager.getInstance().setCookie(url,"blackout_qa=standard; Path=/");CookieManager.getInstance().flush()}
   menu();click("New private session");assertNotNull(device.wait(Until.findObject(By.text("PRIVATE")),20000))
-  device.takeScreenshot(File(context.getExternalFilesDir(null),"qa-private-home.png"))
+  device.executeShellCommand("screencap -p /sdcard/blackout-qa-private-home.png")
   click("Manage");assertNotNull(device.wait(Until.findObject(By.text("Bookmarks")),5000));device.pressBack()
-  click("Open PDF");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack();assertNotNull(device.wait(Until.findObject(By.text("PRIVATE")),10000))
+  click("Open PDF");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack();assertNotNull(device.wait(Until.findObject(By.text("Private session · separate website storage")),10000))
   click("Music");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack()
   repeat(3){device.swipe(device.displayWidth/2,device.displayHeight*3/10,device.displayWidth/2,device.displayHeight*8/10,30)}
   val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue("Native address and homepage search must exist",fields.size>=2);fields.last().click();fields.last().setText(url);device.pressEnter()
