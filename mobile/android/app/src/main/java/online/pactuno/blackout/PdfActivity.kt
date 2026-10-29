@@ -15,7 +15,7 @@ class PdfActivity:AppCompatActivity(){
  private var index=0;private var generation=0;private var closed=false
  private lateinit var image:ImageView;private lateinit var label:TextView
  override fun onCreate(state:Bundle?){super.onCreate(state)
-  val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setBackgroundColor(Color.rgb(16,17,25))};setContentView(root)
+  val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setBackgroundColor(Color.rgb(16,17,25))};setContentView(root);ScreenSafeArea.install(root){val television=packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)||packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_TELEVISION)||(resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK)==android.content.res.Configuration.UI_MODE_TYPE_TELEVISION;getSharedPreferences("blackout_display",MODE_PRIVATE).getInt("tv_margin",if(television)5 else 0)}
   val controls=LinearLayout(this).apply{gravity=Gravity.CENTER_VERTICAL}
   val back=Button(this).apply{text="Close";setOnClickListener{finish()}};controls.addView(back)
   val previous=Button(this).apply{text="Previous";setOnClickListener{render(index-1)}};controls.addView(previous)
