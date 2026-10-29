@@ -44,7 +44,7 @@ class DownloadsJourneyTest{
    assertNotNull(device.wait(Until.findObject(By.text("1 / 1")),15000))
    device.executeShellCommand("screencap -p /sdcard/blackout-qa-download-pdf.png");device.pressBack()
    device.wait(Until.findObject(By.desc("Close downloads")),5000).click()
-   val apkAddress=device.findObjects(By.clazz("android.widget.EditText")).first();apkAddress.click();apkAddress.setText("$root/sample.apk");device.pressEnter()
+   val apkAddress=device.wait(Until.findObject(By.clazz("android.widget.EditText")),10000);assertNotNull("Browser address missing after closing Downloads",apkAddress);apkAddress.click();apkAddress.setText("$root/sample.apk");device.pressEnter()
    device.wait(Until.findObject(By.text("Download")),10000).click()
    assertNotNull(device.wait(Until.findObject(By.text("Downloads")),10000))
    val apkId=DownloadFiles.list(context).first{it.url=="$root/sample.apk"}.id;ids.add(apkId)
