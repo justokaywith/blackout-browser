@@ -38,10 +38,10 @@ open class BrowserActivity : AppCompatActivity() {
  private lateinit var root:LinearLayout;private lateinit var content:FrameLayout;private lateinit var tabStrip:LinearLayout;private lateinit var bookmarkStrip:LinearLayout
  private lateinit var address:EditText;private lateinit var status:TextView;private lateinit var progress:ProgressBar;private lateinit var home:WebView
  private var homeReady=false;private var customView:View?=null;private var customCallback:WebChromeClient.CustomViewCallback?=null;private var player:MediaPlayer?=null
- private var uploadCallback:ValueCallback<Array<Uri>>?=null;private var downloadPending:Pair<String,String>?=null;private var destroyed=false
+ private var uploadCallback:ValueCallback<Array<Uri>>?=null;private var uploadMultiple=false;private var downloadPending:Pair<String,String>?=null;private var destroyed=false
  private var cursorMode=false;private var cursorX=300f;private var cursorY=240f;private var desktopSite=false
  private val blockHosts=setOf("doubleclick.net","googlesyndication.com","google-analytics.com","hotjar.com","taboola.com","outbrain.com","adnxs.com","scorecardresearch.com")
- private val uploadPicker=registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()){uris->uploadCallback?.onReceiveValue(uris.toTypedArray());uploadCallback=null}
+ private val uploadPicker=registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()){uris->val safe=uris.filter{it.scheme=="content"};uploadCallback?.onReceiveValue((if(uploadMultiple)safe else safe.take(1)).toTypedArray());uploadCallback=null}
  private val pdfPicker=registerForActivityResult(ActivityResultContracts.OpenDocument()){uri->if(uri!=null)startActivity(Intent(this,PdfActivity::class.java).setData(uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION))}
  private val musicPicker=registerForActivityResult(ActivityResultContracts.OpenDocument()){uri->if(uri!=null)playAudio(uri)}
  private val storagePermission=registerForActivityResult(ActivityResultContracts.RequestPermission()){ok->val pending=downloadPending;downloadPending=null;if(ok&&pending!=null)enqueueDownload(pending.first,pending.second)else if(!ok)toast("Download permission was not granted.")}
@@ -114,7 +114,7 @@ open class BrowserActivity : AppCompatActivity() {
    override fun onReceivedIcon(view:WebView,icon:Bitmap?){tab.favicon=icon;renderTabs()}
    override fun onPermissionRequest(request:PermissionRequest){runOnUiThread{request.deny()}}
    override fun onGeolocationPermissionsShowPrompt(origin:String,callback:GeolocationPermissions.Callback){callback.invoke(origin,false,false)}
-   override fun onShowFileChooser(view:WebView,callback:ValueCallback<Array<Uri>>,params:FileChooserParams):Boolean{uploadCallback?.onReceiveValue(null);uploadCallback=callback;try{val types=params.acceptTypes.filter{it.contains('/')}.toTypedArray();uploadPicker.launch(if(types.isEmpty())arrayOf("*/*")else types)}catch(_:Exception){uploadCallback=null;callback.onReceiveValue(null)};return true}
+   override fun onShowFileChooser(view:WebView,callback:ValueCallback<Array<Uri>>,params:FileChooserParams):Boolean{uploadCallback?.onReceiveValue(null);uploadCallback=callback;uploadMultiple=params.mode==FileChooserParams.MODE_OPEN_MULTIPLE;try{val types=params.acceptTypes.flatMap{it.split(',')}.map{it.trim()}.filter{Regex("[a-zA-Z0-9.+*-]+/[a-zA-Z0-9.+*-]+").matches(it)}.take(10).toTypedArray();uploadPicker.launch(if(types.isEmpty())arrayOf("*/*")else types)}catch(_:Exception){uploadCallback=null;callback.onReceiveValue(null)};return true}
    override fun onCreateWindow(view:WebView,isDialog:Boolean,isUserGesture:Boolean,resultMsg:Message):Boolean{if(!isUserGesture)return false;newTab();val t=current()?:return false;if(t.web==null)t.web=website(t);content.removeAllViews();content.addView(t.web,FrameLayout.LayoutParams(-1,-1));val transport=resultMsg.obj as WebView.WebViewTransport;transport.webView=t.web;resultMsg.sendToTarget();return true}
    override fun onCloseWindow(window:WebView){val i=tabs.indexOfFirst{it.web==window};if(i>=0)closeTab(i)}
    override fun onShowCustomView(view:View,callback:CustomViewCallback){if(customView!=null){callback.onCustomViewHidden();return};customView=view;customCallback=callback;addContentView(view,ViewGroup.LayoutParams(-1,-1));window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)}

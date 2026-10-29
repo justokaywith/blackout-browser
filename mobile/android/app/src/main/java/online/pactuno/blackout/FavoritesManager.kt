@@ -26,7 +26,7 @@ class FavoritesManager(context: Context) {
 
     private fun seedDefaultFavorites() {
         val defaults = listOf(
-            FavoriteItem("1", "Pactuno Sovereign", "https://pactuno.online", System.currentTimeMillis()),
+            FavoriteItem("1", "Pactuno", "https://pactuno.online", System.currentTimeMillis()),
             FavoriteItem("2", "DuckDuckGo", "https://duckduckgo.com", System.currentTimeMillis()),
             FavoriteItem("3", "YouTube", "https://m.youtube.com", System.currentTimeMillis()),
             FavoriteItem("4", "GitHub", "https://github.com", System.currentTimeMillis()),
