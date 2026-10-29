@@ -21,7 +21,7 @@ class DownloadsJourneyTest{
  private fun completedRow(name:String):UiObject2{val end=android.os.SystemClock.uptimeMillis()+10000;while(android.os.SystemClock.uptimeMillis()<end){val row=device.findObject(By.text(name));if(row?.parent?.findObject(By.textStartsWith("Completed"))!=null)return row;android.os.SystemClock.sleep(100)};throw AssertionError("Downloads UI did not show completed file: $name")}
  private lateinit var server:ServerSocket
  @Test fun browserDownloadsOpenInternallyAndCompletedPdfAndApkAreUsable(){
-  val pdf=PdfDocument().use{document->val page=document.startPage(PdfDocument.PageInfo.Builder(300,400,1).create());page.canvas.drawText("Blackout PDF download QA",20f,40f,Paint().apply{textSize=14f});document.finishPage(page);ByteArrayOutputStream().use{out->document.writeTo(out);out.toByteArray()}}
+  val document=PdfDocument();val pdf=try{val page=document.startPage(PdfDocument.PageInfo.Builder(300,400,1).create());page.canvas.drawText("Blackout PDF download QA",20f,40f,Paint().apply{textSize=14f});document.finishPage(page);ByteArrayOutputStream().use{out->document.writeTo(out);out.toByteArray()}}finally{document.close()}
   val apk=java.io.File(context.applicationInfo.sourceDir).readBytes()
   server=ServerSocket(0);val root="http://127.0.0.1:${server.localPort}"
   val ids=mutableListOf<Long>()
