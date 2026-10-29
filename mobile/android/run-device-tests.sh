@@ -11,4 +11,6 @@ adb pull /sdcard/Android/data/online.pactuno.blackout.debug/files/ ../../android
 adb pull /sdcard/blackout-qa-private-home.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-standard.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-light.png ../../android-qa/ || true
+adb pull /sdcard/blackout-qa-tv-960x540.png ../../android-qa/ || true
+adb pull /sdcard/blackout-qa-tv-1280x720.png ../../android-qa/ || true
 exit "$result"

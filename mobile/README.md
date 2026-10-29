@@ -42,3 +42,7 @@ Release signing uses a private mobile/keystore/keystore.properties and JKS. Miss
 Navigation/file-scheme/download-path unit tests and Android UIAutomator journeys live under android/app/src/test and android/app/src/androidTest. The private-home journey checks Manage/PDF/Music/Search actions and normal/private cookie separation across processes. The remote-site fixture asserts that BlackoutNative is undefined. Tests use a loopback fixture, not customer accounts. Check the actual CI result before claiming device acceptance.
 
 Source is published for version control under the parent repository's existing license/terms; no third-party browser branding or code was copied. Security reports: support@pactuno.online.
+
+### TV picture cropped at the edges
+
+Android 0.3.1 keeps browser controls inside a 5% screen-safe margin on Android TV/SHOQ boxes, including system-bar/cutout insets. Open **Menu → TV screen fit** and choose 3%, 5%, 7% or 10% if your TV needs a different margin. Full screen removes only the extra margin, never the system-bar protection. This adjusts browser layout without shrinking website text. Applies to standard and private browser windows; the local PDF reader also respects TV margins. Physical PTCL/SHOQ hardware acceptance is still required. See [Android TV layout guidance](https://developer.android.com/training/tv/playback/compose/layouts).
