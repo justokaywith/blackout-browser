@@ -25,8 +25,8 @@ class DownloadsActivity:AppCompatActivity(){
  override fun onCreate(state:Bundle?){super.onCreate(state)
   val background=if(light)Color.rgb(245,244,250)else Color.rgb(11,12,18)
   window.statusBarColor=background;window.navigationBarColor=background
-  WindowCompat.getInsetsController(window,window.decorView).apply{isAppearanceLightStatusBars=light;isAppearanceLightNavigationBars=light}
   val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setBackgroundColor(background)};setContentView(root)
+  WindowCompat.getInsetsController(window,window.decorView).apply{isAppearanceLightStatusBars=light;isAppearanceLightNavigationBars=light}
   ScreenSafeArea.install(root){val tv=packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)||packageManager.hasSystemFeature(PackageManager.FEATURE_TELEVISION)||(resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)==Configuration.UI_MODE_TYPE_TELEVISION;getSharedPreferences("blackout_display",MODE_PRIVATE).getInt("tv_margin",if(tv)5 else 0)}
   val bar=LinearLayout(this).apply{gravity=Gravity.CENTER_VERTICAL}
   bar.addView(Button(this).apply{text="Close";contentDescription="Close downloads";setOnClickListener{finish()}})

@@ -58,9 +58,10 @@ class DownloadsJourneyTest{
    device.findObject(By.text("Cancel")).click()
    device.executeShellCommand("appops set ${context.packageName} REQUEST_INSTALL_PACKAGES allow")
    completedRow("blackout-qa-sample.apk").click();device.wait(Until.findObject(By.text("Install APK")),5000).click()
-   assertTrue("Android installer must open after user selects Install APK",device.wait(Until.gone(By.pkg(context.packageName)),15000))
+   assertNotNull("Android package installer must open",device.wait(Until.findObject(By.pkg("com.google.android.packageinstaller")),15000))
+   assertNotNull("Installer confirmation buttons missing",device.wait(Until.findObject(By.text(java.util.regex.Pattern.compile("(?i)install|update|cancel"))),10000))
    device.executeShellCommand("screencap -p /sdcard/blackout-qa-download-installer.png")
    device.pressBack()
-  } finally {server.close();(context.getSystemService(android.content.Context.DOWNLOAD_SERVICE)as DownloadManager).remove(*ids.toLongArray());device.executeShellCommand("appops set ${context.packageName} REQUEST_INSTALL_PACKAGES default")}
+  } finally {server.close();(context.getSystemService(android.content.Context.DOWNLOAD_SERVICE)as DownloadManager).remove(*ids.toLongArray())}
  }
 }
