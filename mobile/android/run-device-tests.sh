@@ -21,4 +21,5 @@ adb pull /sdcard/blackout-qa-download-installer.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-download-list.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-tv-website-960x540.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-tv-website-1280x720.png ../../android-qa/ || true
+adb pull /sdcard/blackout-qa-private-search.png ../../android-qa/ || true
 exit "$result"

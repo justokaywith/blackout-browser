@@ -47,8 +47,10 @@ class BrowserJourneyTest{
   click("Music");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack()
   repeat(3){device.swipe(device.displayWidth/2,device.displayHeight*3/10,device.displayWidth/2,device.displayHeight*8/10,30)}
   val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue("Native address and homepage search must exist",fields.size>=2);fields.last().click();fields.last().setText(url)
+  assertNotNull("Homepage query value was not applied",device.wait(Until.findObject(By.text(url).clazz("android.widget.EditText").pkg(context.packageName)),5000))
+  device.executeShellCommand("screencap -p /sdcard/blackout-qa-private-search.png")
   // Exercise the homepage Search button; native address Enter is covered in the standard journey.
-  val submit=device.findObject(By.desc("Search"))?:device.findObject(By.text("Search"))?:device.findObject(By.text("↗"));assertNotNull("Homepage Search button missing",submit);submit!!.click()
+  val submit=device.findObject(By.desc("Search").pkg(context.packageName))?:device.findObject(By.text("Search").pkg(context.packageName))?:device.findObject(By.text("↗").pkg(context.packageName));assertNotNull("Homepage Search button missing",submit);submit!!.click()
   assertNotNull(device.wait(Until.findObject(By.text("Fixture ready")),15000))
   val request=requests.poll(15,java.util.concurrent.TimeUnit.SECONDS);assertNotNull(request);assertFalse("Private session received standard cookies",request!!.contains("blackout_qa=standard"))
   menu();click("Close private session");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
