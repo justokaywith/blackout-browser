@@ -21,6 +21,7 @@ class TvViewportTest {
    for(size in listOf("960x540","1280x720")){
     device.executeShellCommand("wm size $size")
     context.getSharedPreferences("blackout_desktop_ui",0).edit().clear().commit()
+    context.getSharedPreferences("blackout_display",0).edit().clear().commit()
     ActivityScenario.launch<android.app.Activity>(Intent(context,activityClass)).use{scenario->
      assertNotNull(device.wait(Until.findObject(By.desc("Menu")),15000));device.waitForIdle()
      val safe=Rect()
@@ -43,6 +44,6 @@ class TvViewportTest {
      scenario.onActivity{activity->val root=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0);assertTrue(root.paddingLeft>=root.width*.07)}
     }
    }
-  } finally {device.executeShellCommand("wm size reset");device.executeShellCommand("wm density reset");device.unfreezeRotation()}
+  } finally {context.getSharedPreferences("blackout_display",0).edit().clear().commit();device.executeShellCommand("wm size reset");device.executeShellCommand("wm density reset");device.unfreezeRotation()}
  }
 }
