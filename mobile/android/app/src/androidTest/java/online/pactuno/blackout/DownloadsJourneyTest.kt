@@ -24,15 +24,16 @@ class DownloadsJourneyTest{
   val apk=java.io.File(context.applicationInfo.sourceDir).readBytes()
   server=ServerSocket(0);val root="http://127.0.0.1:${server.localPort}"
   val ids=mutableListOf<Long>()
-  thread(isDaemon=true){while(!server.isClosed)try{server.accept().use{s->s.soTimeout=5000;val reader=s.getInputStream().bufferedReader();val request=reader.readLine().orEmpty();while(!reader.readLine().isNullOrEmpty()){};val isApk=request.contains("sample.apk");val body=if(isApk)apk else pdf;val mime=if(isApk)"application/vnd.android.package-archive" else "application/pdf";s.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: $mime\r\nContent-Length: ${body.size}\r\nConnection: close\r\n\r\n").toByteArray());s.getOutputStream().write(body)}}catch(_:Exception){}}
+  thread(isDaemon=true){while(!server.isClosed)try{server.accept().use{s->s.soTimeout=5000;val reader=s.getInputStream().bufferedReader();val request=reader.readLine().orEmpty();while(!reader.readLine().isNullOrEmpty()){};val isApk=request.contains("sample.apk");val body=if(isApk)apk else pdf;val mime=if(isApk)"application/vnd.android.package-archive" else "application/pdf";val disposition="Content-Disposition: attachment; filename=blackout-qa-sample."+(if(isApk)"apk" else "pdf")+"\r\n";s.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Type: $mime\r\n${disposition}Content-Length: ${body.size}\r\nConnection: close\r\n\r\n").toByteArray());s.getOutputStream().write(body)}}catch(_:Exception){}}
   try{
-   val pdfId=DownloadFiles.enqueue(context,"$root/sample.pdf","blackout-qa-sample.pdf",null);ids.add(pdfId)
-   val secondId=DownloadFiles.enqueue(context,"$root/sample.pdf","blackout-qa-sample.pdf",null)
-   // Reuse while active; if transfer already finished, a deliberate second download is allowed.
-   if(secondId!=pdfId)ids.add(secondId)
-   context.startActivity(Intent(context,DownloadsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+   context.startActivity(Intent(context,BrowserActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
+   assertNotNull(device.wait(Until.findObject(By.text("Favourites")),20000))
+   // Drive the actual browser's native address, download confirmation and in-app progress.
+   val address=device.findObjects(By.clazz("android.widget.EditText")).first();address.click();address.setText("$root/sample.pdf");device.pressEnter()
+   device.wait(Until.findObject(By.text("Download")),10000).click()
    assertNotNull(device.wait(Until.findObject(By.text("Downloads")),15000))
    assertEquals("Downloads must stay inside Blackout",context.packageName,device.currentPackageName)
+   val pdfId=DownloadFiles.list(context).first{it.url=="$root/sample.pdf"}.id;ids.add(pdfId)
    var done=false;val deadline=android.os.SystemClock.uptimeMillis()+30000
    while(!done&&android.os.SystemClock.uptimeMillis()<deadline){done=DownloadFiles.list(context).any{it.id==pdfId&&it.status==DownloadManager.STATUS_SUCCESSFUL};android.os.SystemClock.sleep(200)}
    assertTrue("PDF download did not complete",done)
@@ -40,7 +41,11 @@ class DownloadsJourneyTest{
    device.wait(Until.findObject(By.text("Open file")),5000).click()
    assertNotNull(device.wait(Until.findObject(By.text("1 / 1")),15000))
    device.executeShellCommand("screencap -p /sdcard/blackout-qa-download-pdf.png");device.pressBack()
-   val apkId=DownloadFiles.enqueue(context,"$root/sample.apk","blackout-qa-sample.apk",null);ids.add(apkId)
+   device.wait(Until.findObject(By.text("Close")),5000).click()
+   val apkAddress=device.findObjects(By.clazz("android.widget.EditText")).first();apkAddress.click();apkAddress.setText("$root/sample.apk");device.pressEnter()
+   device.wait(Until.findObject(By.text("Download")),10000).click()
+   assertNotNull(device.wait(Until.findObject(By.text("Downloads")),10000))
+   val apkId=DownloadFiles.list(context).first{it.url=="$root/sample.apk"}.id;ids.add(apkId)
    val until=android.os.SystemClock.uptimeMillis()+30000;done=false
    while(!done&&android.os.SystemClock.uptimeMillis()<until){done=DownloadFiles.list(context).any{it.id==apkId&&it.status==DownloadManager.STATUS_SUCCESSFUL};android.os.SystemClock.sleep(200)}
    assertTrue("APK download did not complete",done)
