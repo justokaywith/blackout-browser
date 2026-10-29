@@ -29,9 +29,9 @@ class DownloadsActivity:AppCompatActivity(){
   val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setBackgroundColor(background)};setContentView(root)
   ScreenSafeArea.install(root){val tv=packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)||packageManager.hasSystemFeature(PackageManager.FEATURE_TELEVISION)||(resources.configuration.uiMode and Configuration.UI_MODE_TYPE_MASK)==Configuration.UI_MODE_TYPE_TELEVISION;getSharedPreferences("blackout_display",MODE_PRIVATE).getInt("tv_margin",if(tv)5 else 0)}
   val bar=LinearLayout(this).apply{gravity=Gravity.CENTER_VERTICAL}
-  bar.addView(Button(this).apply{text="Close";setOnClickListener{finish()}})
+  bar.addView(Button(this).apply{text="Close";contentDescription="Close downloads";setOnClickListener{finish()}})
   bar.addView(TextView(this).apply{text="Downloads";textSize=20f;setTextColor(ink);gravity=Gravity.CENTER},LinearLayout.LayoutParams(0,-2,1f))
-  bar.addView(Button(this).apply{text="Refresh";setOnClickListener{refresh()}});root.addView(bar)
+  bar.addView(Button(this).apply{text="Refresh";contentDescription="Refresh downloads";setOnClickListener{refresh()}});root.addView(bar)
   message=TextView(this).apply{setTextColor(ink);text="Checking downloads…";setPadding(16,8,16,8)};root.addView(message)
   adapter=object:ArrayAdapter<DownloadFiles.Entry>(this,android.R.layout.simple_list_item_2,android.R.id.text1,mutableListOf()){
    override fun getView(position:Int,recycled:View?,parent:ViewGroup):View{

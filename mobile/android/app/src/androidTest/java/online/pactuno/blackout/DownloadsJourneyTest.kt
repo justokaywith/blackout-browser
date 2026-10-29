@@ -38,11 +38,12 @@ class DownloadsJourneyTest{
    var done=false;val deadline=android.os.SystemClock.uptimeMillis()+30000
    while(!done&&android.os.SystemClock.uptimeMillis()<deadline){done=DownloadFiles.list(context).any{it.id==pdfId&&it.status==DownloadManager.STATUS_SUCCESSFUL};android.os.SystemClock.sleep(200)}
    assertTrue("PDF download did not complete",done)
+   device.executeShellCommand("screencap -p /sdcard/blackout-qa-download-list.png")
    completedRow("blackout-qa-sample.pdf").click()
    device.wait(Until.findObject(By.text("Open file")),5000).click()
    assertNotNull(device.wait(Until.findObject(By.text("1 / 1")),15000))
    device.executeShellCommand("screencap -p /sdcard/blackout-qa-download-pdf.png");device.pressBack()
-   device.wait(Until.findObject(By.text("Close")),5000).click()
+   device.wait(Until.findObject(By.desc("Close downloads")),5000).click()
    val apkAddress=device.findObjects(By.clazz("android.widget.EditText")).first();apkAddress.click();apkAddress.setText("$root/sample.apk");device.pressEnter()
    device.wait(Until.findObject(By.text("Download")),10000).click()
    assertNotNull(device.wait(Until.findObject(By.text("Downloads")),10000))
