@@ -36,6 +36,7 @@ class BrowserJourneyTest{
   device.findObject(By.desc("New tab")).click();assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
   device.wait(Until.findObject(By.desc("Close New tab")),5000).click();assertNotNull(device.wait(Until.findObject(By.text("Fixture ready")),10000));menu();click("Reopen closed tab");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
   device.executeShellCommand("screencap -p /sdcard/blackout-qa-standard.png")
+  menu();click("Themes & appearance");click("Light appearance");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000));device.executeShellCommand("screencap -p /sdcard/blackout-qa-light.png")
  }
  @Test fun privateHomeButtonsAndStorageIsolation(){
   instrumentation.runOnMainSync{CookieManager.getInstance().setCookie(url,"blackout_qa=standard; Path=/");CookieManager.getInstance().flush()}

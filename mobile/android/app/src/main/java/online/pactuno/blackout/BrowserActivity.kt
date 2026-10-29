@@ -22,6 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.webkit.WebViewAssetLoader
+import androidx.core.view.WindowCompat
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
@@ -55,7 +56,7 @@ open class BrowserActivity : AppCompatActivity() {
  override fun onCreate(savedInstanceState:Bundle?){
   if(privateSession&&Build.VERSION.SDK_INT>=28&&!privateStorageInitialized){WebView.setDataDirectorySuffix("blackout-private");privateStorageInitialized=true}
   super.onCreate(savedInstanceState);favorites=FavoritesManager(this);history=HistoryManager(this);search=SearchEngineManager(this)
-  window.statusBarColor=surfaceColor;window.navigationBarColor=surfaceColor;buildChrome()
+  window.statusBarColor=surfaceColor;window.navigationBarColor=surfaceColor;buildChrome();syncSystemBars()
   try{home=createHome()}catch(_:Throwable){AlertDialog.Builder(this).setTitle("Android WebView is unavailable").setMessage("Install or update Android System WebView using your device's app store, then reopen Blackout.").setPositiveButton("Close"){_,_->finish()}.setCancelable(false).show();return}
   onBackPressedDispatcher.addCallback(this,object:OnBackPressedCallback(true){override fun handleOnBackPressed(){when{customView!=null->exitFullscreen();cursorMode->{cursorMode=false;toast("Cursor off")};current()?.url!=BrowserPolicy.HOME&&current()?.web?.canGoBack()==true->current()?.web?.goBack();current()?.url!=BrowserPolicy.HOME->navigate(BrowserPolicy.HOME);tabs.size>1->closeTab(active);else->finish()}}})
   val initial=BrowserPolicy.webUrl(intent?.data?.toString().orEmpty())
@@ -92,7 +93,8 @@ open class BrowserActivity : AppCompatActivity() {
  }
  private fun homeAction(u:Uri){when(u.path){"/navigate"->navigate(u.getQueryParameter("url").orEmpty());"/menu"->showMenu();"/bookmarks"->showBookmarks();"/history"->showHistory();"/music"->pickMusic();"/pdf"->pickPdf();"/theme"->{val t=u.getQueryParameter("value");if(t in listOf("eclipse","ember","aurora")){prefs.edit().putString("theme",t).apply();refreshHome()}};"/surface"->{prefs.edit().putString("surface",if(light)"dark" else "light").apply();rebuildChrome()};"/private"->openPrivate()}}
  private fun refreshHome(){if(!homeReady||!::home.isInitialized)return;val items=JSONArray();favorites.getFavorites().take(100).forEach{items.put(JSONObject().put("title",it.title.take(100)).put("url",it.url))};val data=JSONObject().put("favorites",items).put("theme",prefs.getString("theme","eclipse")).put("surface",if(light)"light" else "dark").put("private",privateSession).put("engine",search.getCurrentEngine().name).put("tv",tv);home.evaluateJavascript("window.renderHome && window.renderHome($data);",null)}
- private fun rebuildChrome(){val selected=active;content.removeAllViews();buildChrome();selectTab(selected);window.statusBarColor=surfaceColor;window.navigationBarColor=surfaceColor;address.background=android.graphics.drawable.GradientDrawable().apply{setColor(if(light)Color.WHITE else Color.parseColor("#171820"));cornerRadius=dp(18).toFloat()};refreshHome()}
+ private fun syncSystemBars(){val controller=WindowCompat.getInsetsController(window,window.decorView);controller.isAppearanceLightStatusBars=light;controller.isAppearanceLightNavigationBars=light}
+ private fun rebuildChrome(){val selected=active;content.removeAllViews();buildChrome();selectTab(selected);window.statusBarColor=surfaceColor;window.navigationBarColor=surfaceColor;syncSystemBars();address.background=android.graphics.drawable.GradientDrawable().apply{setColor(if(light)Color.WHITE else Color.parseColor("#171820"));cornerRadius=dp(18).toFloat()};refreshHome()}
  @SuppressLint("SetJavaScriptEnabled") private fun website(tab:Tab):WebView=WebView(this).apply{
   setBackgroundColor(Color.WHITE);settings.javaScriptEnabled=true;settings.domStorageEnabled=true;settings.allowFileAccess=false;settings.allowContentAccess=false;settings.mixedContentMode=WebSettings.MIXED_CONTENT_NEVER_ALLOW;settings.javaScriptCanOpenWindowsAutomatically=false;settings.setSupportMultipleWindows(true);settings.mediaPlaybackRequiresUserGesture=true;settings.setSupportZoom(true);settings.builtInZoomControls=true;settings.displayZoomControls=false;settings.useWideViewPort=true;settings.loadWithOverviewMode=true;settings.safeBrowsingEnabled=true
   if(Build.VERSION.SDK_INT>=29)settings.forceDark=WebSettings.FORCE_DARK_OFF
