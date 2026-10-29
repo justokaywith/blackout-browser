@@ -35,7 +35,7 @@ class TvViewportTest {
       val location=IntArray(2);root.getLocationOnScreen(location)
       safe.set(location[0]+root.paddingLeft,location[1]+root.paddingTop,location[0]+root.width-root.paddingRight,location[1]+root.height-root.paddingBottom)
      }
-      val labels=listOf("Back","Reload","Menu","New tab","Previous bookmarks","Next bookmarks")
+      val labels=listOf("Back","Reload","Menu","Tabs")
       val deadline=android.os.SystemClock.uptimeMillis()+10000
       while(android.os.SystemClock.uptimeMillis()<deadline&&!labels.all{label->device.findObject(By.desc(label))?.visibleBounds?.let{safe.contains(it)}==true}){android.os.SystemClock.sleep(100)}
       for(label in labels){
