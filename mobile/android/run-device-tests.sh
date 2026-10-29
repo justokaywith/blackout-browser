@@ -13,4 +13,7 @@ adb pull /sdcard/blackout-qa-standard.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-light.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-tv-960x540.png ../../android-qa/ || true
 adb pull /sdcard/blackout-qa-tv-1280x720.png ../../android-qa/ || true
+adb pull /sdcard/blackout-qa-download-pdf.png ../../android-qa/ || true
+adb pull /sdcard/blackout-qa-download-apk-permission.png ../../android-qa/ || true
+adb pull /sdcard/blackout-qa-download-installer.png ../../android-qa/ || true
 exit "$result"
