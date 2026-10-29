@@ -28,13 +28,13 @@ class BrowserJourneyTest{
   assertNotNull(device.wait(Until.findObject(By.text("Favourites")),20000))
  }
  @After fun stop(){server.close();device.pressHome()}
- private fun click(text:String){val node=device.wait(Until.findObject(By.text(text)),12000);assertNotNull("Missing button $text",node);node.click();device.waitForIdle()}
+ private fun click(text:String){var node=device.wait(Until.findObject(By.text(text)),2500);for(i in 0..3){if(node!=null)break;device.swipe(device.displayWidth/2,device.displayHeight*8/10,device.displayWidth/2,device.displayHeight*3/10,30);node=device.wait(Until.findObject(By.text(text)),1500)};assertNotNull("Missing button $text",node);node.click();device.waitForIdle()}
  private fun menu(){device.wait(Until.findObject(By.desc("Menu")),10000).click();device.waitForIdle()}
- private fun address(value:String){val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue(fields.isNotEmpty());fields.first().setText(value);device.pressEnter();device.waitForIdle()}
+ private fun address(value:String){val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue(fields.isNotEmpty());fields.first().click();fields.first().setText(value);device.pressEnter();device.waitForIdle()}
  @Test fun standardTabsNavigationAndNoNativeBridge(){
   address(url);assertNotNull(device.wait(Until.findObject(By.text("nativeBridge=undefined")),15000))
   device.findObject(By.desc("New tab")).click();assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
-  menu();click("Reopen closed tab");device.pressBack()
+  device.findObject(By.desc("Close New tab")).click();assertNotNull(device.wait(Until.findObject(By.text("Fixture ready")),10000));menu();click("Reopen closed tab");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
   device.takeScreenshot(File(context.getExternalFilesDir(null),"qa-standard.png"))
  }
  @Test fun privateHomeButtonsAndStorageIsolation(){
@@ -44,7 +44,8 @@ class BrowserJourneyTest{
   click("Manage");assertNotNull(device.wait(Until.findObject(By.text("Bookmarks")),5000));device.pressBack()
   click("Open PDF");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack();assertNotNull(device.wait(Until.findObject(By.text("PRIVATE")),10000))
   click("Music");assertTrue(device.wait(Until.gone(By.pkg(context.packageName)),8000));device.pressBack()
-  val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue("Native address and homepage search must exist",fields.size>=2);fields.last().setText(url);device.pressEnter()
+  repeat(3){device.swipe(device.displayWidth/2,device.displayHeight*3/10,device.displayWidth/2,device.displayHeight*8/10,30)}
+  val fields=device.findObjects(By.clazz("android.widget.EditText"));assertTrue("Native address and homepage search must exist",fields.size>=2);fields.last().click();fields.last().setText(url);device.pressEnter()
   assertNotNull(device.wait(Until.findObject(By.text("Fixture ready")),15000))
   val request=requests.poll(15,java.util.concurrent.TimeUnit.SECONDS);assertNotNull(request);assertFalse("Private session received standard cookies",request!!.contains("blackout_qa=standard"))
   menu();click("Close private session");assertNotNull(device.wait(Until.findObject(By.text("Favourites")),10000))
