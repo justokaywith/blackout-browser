@@ -48,7 +48,7 @@ jobs:
           profile: pixel_2
           disable-animations: true
           emulator-options: -no-window -no-snapshot -no-audio -gpu swiftshader_indirect -no-boot-anim
-          script: cd mobile/android && ./gradlew :app:connectedDebugAndroidTest --no-daemon
+          script: bash mobile/android/run-device-tests.sh
       - name: Collect screenshots
         if: always()
         run: |
