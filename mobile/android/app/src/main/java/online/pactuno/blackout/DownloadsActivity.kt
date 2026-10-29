@@ -33,7 +33,7 @@ class DownloadsActivity:AppCompatActivity(){
   bar.addView(TextView(this).apply{text="Downloads";textSize=20f;setTextColor(ink);gravity=Gravity.CENTER},LinearLayout.LayoutParams(0,-2,1f))
   bar.addView(Button(this).apply{text="Refresh";setOnClickListener{refresh()}});root.addView(bar)
   message=TextView(this).apply{setTextColor(ink);text="Checking downloads…";setPadding(16,8,16,8)};root.addView(message)
-  adapter=object:ArrayAdapter<DownloadFiles.Entry>(this,android.R.layout.simple_list_item_2,mutableListOf()){
+  adapter=object:ArrayAdapter<DownloadFiles.Entry>(this,android.R.layout.simple_list_item_2,android.R.id.text1,mutableListOf()){
    override fun getView(position:Int,recycled:View?,parent:ViewGroup):View{
     val view=super.getView(position,recycled,parent);val item=getItem(position)!!
     view.findViewById<TextView>(android.R.id.text1).apply{text=item.title;if(text.isEmpty())text="Downloaded file";setTextColor(ink);maxLines=2}
