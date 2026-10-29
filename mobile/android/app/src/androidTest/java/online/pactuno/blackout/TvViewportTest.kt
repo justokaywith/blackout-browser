@@ -38,8 +38,8 @@ class TvViewportTest {
       }
      device.executeShellCommand("screencap -p /sdcard/blackout-qa-tv-$size.png")
      device.findObject(By.desc("Menu")).click()
-     val list=device.findObject(By.scrollable(true));var fit=device.findObject(By.text("TV screen fit"))
-     repeat(5){if(fit==null){list?.scroll(Direction.DOWN,0.7f);fit=device.findObject(By.text("TV screen fit"))}}
+     val list=device.wait(Until.findObject(By.clazz("android.widget.ListView")),5000);assertNotNull("Browser menu list missing",list);var fit=device.findObject(By.text("TV screen fit"))
+     repeat(5){if(fit==null){list!!.scroll(Direction.DOWN,0.7f);device.waitForIdle();fit=device.wait(Until.findObject(By.text("TV screen fit")),1000)}}
      assertNotNull(fit);fit!!.click();device.wait(Until.findObject(By.text("7% safe margin")),5000).click();device.waitForIdle()
      scenario.onActivity{activity->val root=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0);assertTrue(root.paddingLeft>=root.width*.07)}
     }
