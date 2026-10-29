@@ -9,7 +9,8 @@ object ScreenSafeArea {
  fun install(root:View,percent:()->Int){
   ViewCompat.setOnApplyWindowInsetsListener(root){_,insets->refresh(root,percent(),insets);insets}
   root.addOnLayoutChangeListener{_,left,top,right,bottom,oldLeft,oldTop,oldRight,oldBottom->
-   if(right-left!=oldRight-oldLeft||bottom-top!=oldBottom-oldTop)refresh(root,percent())
+   // Do not request a second layout from inside the current layout traversal.
+   if(right-left!=oldRight-oldLeft||bottom-top!=oldBottom-oldTop)root.post{refresh(root,percent());root.requestLayout()}
   }
   root.post{ViewCompat.requestApplyInsets(root);refresh(root,percent())}
  }
