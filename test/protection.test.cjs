@@ -9,7 +9,11 @@ const {
   getProtectionSettings,
   setProtectionMode,
   recordNetworkActivity,
-  getTrackerActivity
+  getTrackerActivity,
+  isAdBlockEnabled,
+  setAdBlockEnabled,
+  toggleAdBlock,
+  loadSavedAdBlockState
 } = require('../electron/protection.cjs');
 
 test('protection modes have the 3 required options mapped to color profiles', () => {
@@ -62,13 +66,39 @@ test('preload script exposes protection APIs', () => {
   const preloadCode = fs.readFileSync(path.join(__dirname, '..', 'electron', 'preload.cjs'), 'utf8');
   assert.match(preloadCode, /setProtectionMode:\s*\(mode\)\s*=>/);
   assert.match(preloadCode, /getProtectionMode:\s*\(\)\s*=>/);
+  assert.match(preloadCode, /getAdBlockState:\s*\(\)\s*=>/);
+  assert.match(preloadCode, /toggleAdBlock:\s*\(explicitVal\)\s*=>/);
 });
 
-test('UI index.html contains protection pill and menu options', () => {
+test('UI index.html contains protection pill, menu options, and taskbar adblock toggle switch', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'ui', 'index.html'), 'utf8');
   assert.match(html, /id="protection-button"/);
   assert.match(html, /id="protection-menu"/);
   assert.match(html, /data-mode="light"/);
   assert.match(html, /data-mode="balanced"/);
   assert.match(html, /data-mode="extra"/);
+  assert.match(html, /id="adblock-toggle"/);
+  assert.match(html, /class="adblock-toggle-btn/);
+  assert.match(html, /class="adblock-switch-track"/);
 });
+
+test('adblock state can be toggled, set, and loaded with persistence mock', () => {
+  assert.equal(typeof isAdBlockEnabled(), 'boolean');
+  const initial = isAdBlockEnabled();
+
+  const toggled = toggleAdBlock();
+  assert.equal(toggled, !initial);
+  assert.equal(isAdBlockEnabled(), !initial);
+
+  setAdBlockEnabled(true);
+  assert.equal(isAdBlockEnabled(), true);
+
+  setAdBlockEnabled(false);
+  assert.equal(isAdBlockEnabled(), false);
+
+  // Restore back to true
+  setAdBlockEnabled(true);
+  assert.equal(isAdBlockEnabled(), true);
+});
+
+test("protection does not hide platform playback warnings or mutate video state",()=>{const source=fs.readFileSync(path.join(__dirname,"../electron/protection.cjs"),"utf8");assert.doesNotMatch(source,/dismissEnforcement|ytd-enforcement-message-view-model|video\.playbackRate\s*=/);});

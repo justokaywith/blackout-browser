@@ -58,5 +58,7 @@ contextBridge.executeInMainWorld({
         configurable: true
       });
     } catch {}
+
+    // Site player data and fetch/XHR remain unmodified. Blocking is controlled by the session policy.
   }
 });

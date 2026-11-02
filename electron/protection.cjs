@@ -58,7 +58,8 @@ const AD_BLOCK_CSS = `
   ytd-display-ad-renderer,
   ytd-in-feed-ad-layout-renderer,
   ytd-banner-promo-renderer,
-  #masthead-ad {
+  #masthead-ad
+ {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -66,78 +67,6 @@ const AD_BLOCK_CSS = `
     opacity: 0 !important;
     pointer-events: none !important;
   }
-`;
-
-const AD_SKIP_SCRIPT = `
-(function() {
-  if (window.__blackout_ad_shield_active) return;
-  window.__blackout_ad_shield_active = true;
-  let adVideo = null;
-  let originalMuted = false;
-  let originalRate = 1;
-
-  function handleYouTubeAds() {
-    try {
-      const player = document.getElementById('movie_player') || document.querySelector('.html5-video-player');
-      if (!player) return;
-
-      const isAd = player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting');
-      if (isAd) {
-        // 1. Safe native skip if exposed by player engine
-        if (typeof player.skipAd === 'function') {
-          try { player.skipAd(); } catch(e) {}
-        }
-
-        // 2. Click skip buttons as soon as visible
-        const skipSelectors = [
-          '.ytp-ad-skip-button',
-          '.ytp-ad-skip-button-modern',
-          '.ytp-skip-ad-button',
-          '.ytp-ad-overlay-close-button',
-          'button.ytp-ad-skip-button-icon',
-          '.ytp-ad-skip-button-slot button',
-          '.ytp-ad-skip-button-container button',
-          '[class*="ytp-ad-skip-button"]'
-        ];
-        for (const sel of skipSelectors) {
-          const btn = player.querySelector(sel);
-          if (btn && typeof btn.click === 'function') {
-            try { btn.click(); return; } catch(e) {}
-          }
-        }
-
-        // 3. For unskippable ads, safely advance without corrupting MediaSource buffers
-        const video = player.querySelector('video');
-        if (video) {
-          if (adVideo !== video) {
-            adVideo = video;
-            originalMuted = video.muted;
-            originalRate = video.playbackRate;
-          }
-          video.muted = true;
-          if (Number.isFinite(video.duration) && video.duration > 0 && video.duration < 120) {
-            // Keep at least 0.2s before EOS to prevent MediaSource decoder crash
-            if (video.currentTime < video.duration - 0.25) {
-              try { video.currentTime = video.duration - 0.25; } catch(e) {}
-            }
-          }
-          if (video.playbackRate < 8) {
-            try { video.playbackRate = 8; } catch(e) {}
-          }
-        }
-      } else {
-        // Reset playback rate once ad has completed
-        const video = player.querySelector('video');
-        if (adVideo) {
-          try { adVideo.muted = originalMuted; adVideo.playbackRate = originalRate; } catch(e) {}
-          adVideo = null;
-        }
-      }
-    } catch(e) {}
-  }
-
-  setInterval(handleYouTubeAds, 250);
-})();
 `;
 
 const PROTECTION_MODES = {
@@ -177,8 +106,43 @@ const PROTECTION_MODES = {
 };
 
 let currentMode = 'balanced';
+let adBlockActive = true;
 let adsBlockedCount = 0;
 const trackerActivity = new Map();
+
+function isAdBlockEnabled() {
+  return adBlockActive;
+}
+
+function setAdBlockEnabled(enabled, app) {
+  adBlockActive = Boolean(enabled);
+  try {
+    if (app) {
+      const p = path.join(app.getPath('userData'), 'adblock-toggle.json');
+      fs.writeFileSync(p, JSON.stringify({ enabled: adBlockActive }), 'utf8');
+    }
+  } catch {}
+  return adBlockActive;
+}
+
+function toggleAdBlock(app) {
+  return setAdBlockEnabled(!adBlockActive, app);
+}
+
+function loadSavedAdBlockState(app) {
+  try {
+    if (app) {
+      const p = path.join(app.getPath('userData'), 'adblock-toggle.json');
+      if (fs.existsSync(p)) {
+        const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (typeof data?.enabled === 'boolean') {
+          adBlockActive = data.enabled;
+        }
+      }
+    }
+  } catch {}
+  return adBlockActive;
+}
 
 function recordNetworkActivity(details, blocked) {
   if (!Number.isInteger(details?.webContentsId)) return;
@@ -234,13 +198,18 @@ function loadSavedProtectionMode(app) {
   return currentMode;
 }
 
-function applyProtectionToSession(browserSession) {
+function applyProtectionToSession(browserSession, pageUrl = () => null) {
   const config = getProtectionSettings(currentMode);
 
   // 1. Request Interception (Ad & Tracker Blocking)
   browserSession.webRequest.onBeforeRequest({ urls: ['<all_urls>'] }, (details, callback) => {
-    if (config.adBlock) {
+    if (adBlockActive && config.adBlock) {
       const url = details.url.toLowerCase();
+      // Compatibility exception: keep video/ad playback contracts intact on YouTube.
+      // This is intentionally not advertised as undetectable video-ad blocking.
+      const youtube=value=>{try{const host=new URL(value).hostname;return host==="youtube.com"||host.endsWith(".youtube.com")}catch{return false}};
+      if(youtube(details.url)||youtube(details.referrer)||youtube(details.initiator)||youtube(pageUrl(details.webContentsId))){recordNetworkActivity(details,false);return callback({cancel:false});}
+
       const isAd = AD_BLOCK_PATTERNS.some(pat => {
         if (!pat.includes('*')) return url.includes(pat);
         const regexStr = '^' + pat.split('*').map(s => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$';
@@ -309,12 +278,15 @@ function applyProtectionToSession(browserSession) {
   });
 }
 
-function injectAdShield(webContents) {
-  const config = getProtectionSettings(currentMode);
-  if (!config.adBlock) return;
-
-  webContents.insertCSS(AD_BLOCK_CSS).catch(() => {});
-  webContents.executeJavaScript(AD_SKIP_SCRIPT).catch(() => {});
+const pageStyles=new WeakMap(),styleJobs=new WeakMap();
+function injectAdShield(webContents){
+ const task=(styleJobs.get(webContents)||Promise.resolve()).catch(()=>{}).then(async()=>{
+  if(webContents.isDestroyed?.())return;
+  const old=pageStyles.get(webContents);if(old){await webContents.removeInsertedCSS(old).catch(()=>{});pageStyles.delete(webContents);}
+  const config=getProtectionSettings(currentMode);if(!adBlockActive||!config.adBlock)return;
+  try{const h=new URL(webContents.getURL()).hostname;if(h==="youtube.com"||h.endsWith(".youtube.com"))return;}catch{}
+  const key=await webContents.insertCSS(AD_BLOCK_CSS).catch(()=>null);if(key)pageStyles.set(webContents,key);
+ });styleJobs.set(webContents,task);return task;
 }
 
 module.exports = {
@@ -323,6 +295,10 @@ module.exports = {
   getProtectionSettings,
   setProtectionMode,
   loadSavedProtectionMode,
+  isAdBlockEnabled,
+  setAdBlockEnabled,
+  toggleAdBlock,
+  loadSavedAdBlockState,
   applyProtectionToSession,
   injectAdShield,
   recordNetworkActivity,

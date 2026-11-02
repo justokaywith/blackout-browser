@@ -1141,6 +1141,40 @@ if (protectionBtn && protectionMenu) {
   });
 }
 
+const adblockToggleBtn = $('#adblock-toggle');
+
+function updateAdBlockUI(enabled) {
+  if (!adblockToggleBtn) return;
+  const isActive = Boolean(enabled);
+  adblockToggleBtn.classList.toggle('active', isActive);
+  adblockToggleBtn.setAttribute('aria-checked', String(isActive));
+  adblockToggleBtn.title = isActive
+    ? 'Ad blocking on. YouTube playback uses compatibility mode and may show ads. Click to disable.'
+    : 'Ad blocking off. Click to enable.';
+}
+
+if (adblockToggleBtn) {
+  adblockToggleBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if(adblockToggleBtn.disabled)return;adblockToggleBtn.disabled=true;
+    if (window.blackout?.toggleAdBlock) {
+      try {
+        const newState = await window.blackout.toggleAdBlock();
+        updateAdBlockUI(newState);
+      } catch {} finally{adblockToggleBtn.disabled=false;}
+    } else {
+      const willBeActive = !adblockToggleBtn.classList.contains('active');
+      updateAdBlockUI(willBeActive);adblockToggleBtn.disabled=false;
+    }
+  });
+}
+
+if (window.blackout?.getAdBlockState) {
+  window.blackout.getAdBlockState().then(enabled => {
+    updateAdBlockUI(enabled);
+  }).catch(() => {});
+}
+
 try {
   const savedMode = localStorage.getItem('blackout-protection-mode') || 'balanced';
   updateProtectionUI(savedMode);
@@ -1248,6 +1282,8 @@ if (!window.blackout) {
         applyAppearance({ theme: modeThemeMap[state.mode] || 'eclipse' });
         try { localStorage.setItem('blackout-protection-mode', state.mode); } catch {}
       }
+    } else if (state.type === 'adblock-state') {
+      updateAdBlockUI(state.enabled);
     } else if (state.type === 'open-extension-item') {
       if (state.id) openExtensionAction(state.id);
     } else if (state.type === 'toggle-pin-extension') {

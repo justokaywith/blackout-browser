@@ -22,7 +22,11 @@ const {
   injectAdShield,
   getAdsBlockedCount,
   getTrackerActivity,
-  getCurrentProtectionMode
+  getCurrentProtectionMode,
+  isAdBlockEnabled,
+  setAdBlockEnabled,
+  toggleAdBlock,
+  loadSavedAdBlockState
 } = require('./protection.cjs');
 const { injectAnonymityShield } = require('./anonymity.cjs');
 const { parseWireGuardConfig } = require('./wireguard.cjs');
@@ -335,7 +339,7 @@ function showSiteInfoPopup(context, info) {
 
 function closeMenuPopup(context) {
   const popup = context?.menuPopup;
-  if (popup && !popup.isDestroyed()) popup.close();
+  if (popup && !popup.isDestroyed()) {if(popup===context.musicPopup)popup.hide();else popup.close();}
   if (context) context.menuPopup = null;
 }
 
@@ -551,6 +555,10 @@ function showDownloadsPopup(context, anchorBounds) {
 }
 
 function showMusicPopup(context, anchorBounds) {
+  if(context.musicPopup&&!context.musicPopup.isDestroyed()){
+    if(context.menuPopup===context.musicPopup){closeMenuPopup(context);return false;}
+    closeMenuPopup(context);context.menuPopup=context.musicPopup;context.musicPopup.show();context.musicPopup.focus();return true;
+  }
   if (context.menuPopup && !context.menuPopup.isDestroyed()) {
     closeMenuPopup(context);
     return false;
@@ -592,13 +600,13 @@ function showMusicPopup(context, anchorBounds) {
       sandbox: false
     }
   });
-  context.menuPopup = popup;
+  context.menuPopup = popup;context.musicPopup=popup;popup.webContents.setBackgroundThrottling?.(false);
   popup.on('blur', () => {
     setTimeout(() => {
       if (context.menuPopup === popup) closeMenuPopup(context);
     }, 100);
   });
-  popup.on('closed', () => { if (context.menuPopup === popup) context.menuPopup = null; });
+  popup.on('closed', () => {if(context.musicPopup===popup)context.musicPopup=null;if(context.menuPopup===popup)context.menuPopup=null;});
   // Local controls are ready at DOM load; remote artwork must not delay opening.
   popup.webContents.once('dom-ready', () => { if (!popup.isDestroyed()) popup.show(); });
   // file:// remains available when Chromium considers the device offline.
@@ -794,7 +802,7 @@ function browserSessionFor(mode) {
       callback(details.frame && details.frame.url === frameUrl ? accounts[response]?.credentialId : undefined);
     } catch { callback(); }
   });
-  applyProtectionToSession(browserSession);
+  applyProtectionToSession(browserSession,id=>{for(const ctx of contexts.values())for(const tab of ctx.tabs.values())if(tab.view.webContents.id===id)return tab.view.webContents.getURL();return null;});
   loadPersistedExtensions(browserSession, app).catch(() => {});
   profileSessions.set(mode, browserSession);
   return { profile, browserSession };
@@ -1887,7 +1895,7 @@ function registerIpc() {
   ipcMain.handle('browser:set-protection-mode', (_event, mode) => {
     const activeMode = setProtectionMode(mode, app);
     for (const s of profileSessions.values()) {
-      applyProtectionToSession(s);
+      applyProtectionToSession(s,id=>{for(const ctx of contexts.values())for(const tab of ctx.tabs.values())if(tab.view.webContents.id===id)return tab.view.webContents.getURL();return null;});
     }
     for (const ctx of contexts.values()) {
       sendState(ctx, { type: 'protection-mode', mode: activeMode });
@@ -1976,8 +1984,25 @@ function registerIpc() {
   ipcMain.handle('browser:get-protection-mode', () => {
     return {
       settings: getProtectionSettings(),
-      adsBlocked: getAdsBlockedCount()
+      adsBlocked: getAdsBlockedCount(),
+      adBlockEnabled: isAdBlockEnabled()
     };
+  });
+  ipcMain.handle('browser:get-adblock-state', () => {
+    return isAdBlockEnabled();
+  });
+  ipcMain.handle('browser:toggle-adblock', (_event, explicitVal) => {
+    const activeState = (typeof explicitVal === 'boolean')
+      ? setAdBlockEnabled(explicitVal, app)
+      : toggleAdBlock(app);
+    for (const s of profileSessions.values()) {
+      applyProtectionToSession(s,id=>{for(const ctx of contexts.values())for(const tab of ctx.tabs.values())if(tab.view.webContents.id===id)return tab.view.webContents.getURL();return null;});
+    }
+    for (const ctx of contexts.values()) {
+      sendState(ctx, { type: 'adblock-state', enabled: activeState });
+      for (const tab of ctx.tabs.values()) {injectAdShield(tab.view.webContents);if(/(^|\.)youtube\.com$/.test((()=>{try{return new URL(tab.view.webContents.getURL()).hostname}catch{return ""}})()))tab.view.webContents.reload();}
+    }
+    return activeState;
   });
   ipcMain.handle('browser:set-proxy', async (event, config) => {
     const context = contextForSender(event.sender);
@@ -2092,97 +2117,8 @@ function registerIpc() {
       } catch {}
 
       const setupOptimizer = () => {
-        if (!backgroundMusicWin || backgroundMusicWin.isDestroyed()) return;
-        backgroundMusicWin.webContents.insertCSS(`
-          #comments, #related, #secondary, #masthead-container, ytd-merch-shelf-renderer, ytd-live-chat-frame {
-            display: none !important;
-          }
-        `).catch(() => {});
-
-        backgroundMusicWin.webContents.executeJavaScript(`
-          (() => {
-            window.__blackoutVolume = ${currentMusicVolume};
-            try {
-              Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
-              Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
-              window.dispatchEvent(new Event('visibilitychange'));
-            } catch {}
-
-            if (window.__blackoutAdSkipper) clearInterval(window.__blackoutAdSkipper);
-
-            let lastKickstartAttempt = 0;
-            window.__blackoutAdSkipper = setInterval(() => {
-              const player = document.getElementById('movie_player') || document.querySelector('.html5-video-player');
-              const v = document.querySelector('video') || document.querySelector('audio');
-
-              // 1. Auto-dismiss any Google / YouTube consent dialogs or popups
-              const consentBtns = document.querySelectorAll('ytd-consent-bump-v2-lightbox button, button[aria-label*="Accept"], button[aria-label*="agree"], .yt-spec-button-shape-next--filled, #content.ytd-consent-bump-v2-lightbox-renderer button');
-              consentBtns.forEach(b => { try { b.click(); } catch {} });
-
-              // 2. Click large play button or center play button if present
-              const largePlay = document.querySelector('.ytp-large-play-button, .ytp-play-button');
-              if (largePlay && !window.__blackoutUserPaused && v && v.paused) {
-                try { largePlay.click(); } catch {}
-              }
-
-              // 3. Ad skipping & fast forward
-              const ad = document.querySelector('.ad-showing, .ad-interrupting');
-              if (ad && v) {
-                try { v.playbackRate = 16; } catch {}
-                try { v.muted = true; } catch {}
-                const skipBtn = document.querySelector('.ytp-skip-ad-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button, .videoAdUiSkipButton, .ytp-ad-skip-button-container button');
-                if (skipBtn) try { skipBtn.click(); } catch {}
-                if (isFinite(v.duration) && v.duration > 0 && v.currentTime < v.duration - 0.2) {
-                  try { v.currentTime = v.duration - 0.2; } catch {}
-                }
-              } else if (v) {
-                if (v.playbackRate !== 1) {
-                  try { v.playbackRate = 1; } catch {}
-                }
-                if (typeof window.__blackoutVolume === 'number') {
-                  const isZero = (window.__blackoutVolume === 0);
-                  try {
-                    v.volume = window.__blackoutVolume;
-                    v.muted = isZero;
-                  } catch {}
-                  try {
-                    if (player && typeof player.setVolume === 'function') {
-                      player.setVolume(Math.round(window.__blackoutVolume * 100));
-                      if (isZero && typeof player.mute === 'function') {
-                        player.mute();
-                      } else if (!isZero && typeof player.unMute === 'function') {
-                        player.unMute();
-                      }
-                    }
-                  } catch {}
-                }
-
-                // 4. Force unstick at start:
-                if (!window.__blackoutUserPaused) {
-                  const now = Date.now();
-                  const state = (player && typeof player.getPlayerState === 'function') ? player.getPlayerState() : -1;
-                  // State 1 = playing. If not playing and at start (< 0.5s):
-                  if (state !== 1 && v.currentTime < 0.5 && now - lastKickstartAttempt > 350) {
-                    lastKickstartAttempt = now;
-                    if (window.__blackoutVolume > 0) {
-                      try { player?.unMute?.(); } catch {}
-                    } else {
-                      try { player?.mute?.(); } catch {}
-                      try { v.muted = true; } catch {}
-                    }
-                    try { player?.playVideo?.(); } catch {}
-                    try { player?.seekTo?.(0.1, true); } catch {}
-                    if (v.paused) v.play().catch(() => {});
-                  } else if (v.paused && !v.ended && state !== 1 && now - lastKickstartAttempt > 500) {
-                    lastKickstartAttempt = now;
-                    try { player?.playVideo?.(); } catch {}
-                    v.play().catch(() => {});
-                  }
-                }
-              }
-            }, 180);
-          })();
-        `).catch(() => {});
+        if(!backgroundMusicWin||backgroundMusicWin.isDestroyed())return;
+        backgroundMusicWin.webContents.executeJavaScript("(()=>{const v=document.querySelector(\"video,audio\");if(v){v.volume="+currentMusicVolume+";v.muted="+(currentMusicVolume===0)+";if(!window.__blackoutUserPaused)v.play().catch(()=>{});}})()").catch(()=>{});
       };
 
       backgroundMusicWin.webContents.on('did-finish-load', setupOptimizer);
@@ -2481,6 +2417,7 @@ app.whenReady().then(async () => {
       app.userAgentFallback = cleanUa;
     }
     loadSavedProtectionMode(app);
+    loadSavedAdBlockState(app);
     log('protection mode loaded');
     oauthBridge = createOauthBridge({
       BrowserWindow,
