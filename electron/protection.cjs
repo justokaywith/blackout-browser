@@ -75,33 +75,36 @@ const PROTECTION_MODES = {
     label: 'Light',
     theme: 'aurora',
     adBlock: true,
+    cosmeticFilter: false,
     stripReferrer: false,
     retainSessions: true,
     blockThirdPartyCookies: false,
     anonymityShield: false,
-    description: 'Standard browsing with full compatibility and default web storage.'
+    description: 'Known ad-network filtering without cosmetic page changes. The AdBlock toggle controls filtering.'
   },
   balanced: {
     id: 'balanced',
     label: 'Balanced',
     theme: 'eclipse',
     adBlock: true,
+    cosmeticFilter: true,
     stripReferrer: false,
     retainSessions: true,
     blockThirdPartyCookies: false,
     anonymityShield: false,
-    description: 'Secure browsing with active Ad Blocking for YouTube and web pages.'
+    description: 'Known ad-network and cosmetic page filtering. YouTube compatibility may show ads.'
   },
   extra: {
     id: 'extra',
     label: 'Extra',
     theme: 'ember',
     adBlock: true,
+    cosmeticFilter: true,
     stripReferrer: true,
     retainSessions: true,
     blockThirdPartyCookies: true,
     anonymityShield: true,
-    description: 'Hardened privacy & anti-tracking. Retains your logins and active sessions safely.'
+    description: 'Adds cross-origin cookie/referrer restrictions and fingerprinting mitigations. Some sites may need Balanced; this is not anonymity.'
   }
 };
 
@@ -200,6 +203,8 @@ function loadSavedProtectionMode(app) {
 
 function applyProtectionToSession(browserSession, pageUrl = () => null) {
   const config = getProtectionSettings(currentMode);
+  const crossOrigin=details=>{try{const top=pageUrl(details.webContentsId)||details.initiator||details.referrer||details.frame?.url;if(!top)return false;return new URL(top).origin!==new URL(details.url).origin;}catch{return false;}};
+  const removeHeaders=(headers,names)=>{for(const key of Object.keys(headers))if(names.includes(key.toLowerCase()))delete headers[key];};
 
   // 1. Request Interception (Ad & Tracker Blocking)
   browserSession.webRequest.onBeforeRequest({ urls: ['<all_urls>'] }, (details, callback) => {
@@ -235,21 +240,12 @@ function applyProtectionToSession(browserSession, pageUrl = () => null) {
     const requestHeaders = privacyHeaders(details.requestHeaders);
 
     const isMainFrame = details.resourceType === 'mainFrame' || details.resourceType === 'main_frame';
-    if (config.stripReferrer && !isMainFrame) {
-      try {
-        const reqOrigin = new URL(details.url).origin;
-        const refOrigin = details.referrer ? new URL(details.referrer).origin : '';
-        if (reqOrigin !== refOrigin) {
-          delete requestHeaders['Referer'];
-          delete requestHeaders['referer'];
-        }
-      } catch {}
-    }
+    if (config.stripReferrer && !isMainFrame && crossOrigin(details))removeHeaders(requestHeaders,['referer']);
+    if(config.blockThirdPartyCookies&&!isMainFrame&&crossOrigin(details))removeHeaders(requestHeaders,['cookie']);
 
     // Strip client hint tracking in Extra mode
     if (currentMode === 'extra') {
-      delete requestHeaders['Sec-CH-UA-Model'];
-      delete requestHeaders['Sec-CH-UA-Platform-Version'];
+      removeHeaders(requestHeaders,['sec-ch-ua-model','sec-ch-ua-platform-version']);
     }
 
     callback({ requestHeaders });
@@ -260,19 +256,7 @@ function applyProtectionToSession(browserSession, pageUrl = () => null) {
     const responseHeaders = { ...details.responseHeaders };
     const isMainFrame = details.resourceType === 'mainFrame' || details.resourceType === 'main_frame';
 
-    if (config.blockThirdPartyCookies && !isMainFrame) {
-      try {
-        const reqHost = new URL(details.url).hostname;
-        const mainHost = details.frame ? new URL(details.frame.url || details.url).hostname : reqHost;
-        const isThirdParty = !reqHost.endsWith(mainHost) && !mainHost.endsWith(reqHost);
-
-        if (isThirdParty) {
-          // Block setting 3rd party tracking cookies
-          delete responseHeaders['set-cookie'];
-          delete responseHeaders['Set-Cookie'];
-        }
-      } catch {}
-    }
+    if (config.blockThirdPartyCookies && !isMainFrame && crossOrigin(details))removeHeaders(responseHeaders,['set-cookie']);
 
     callback({ responseHeaders });
   });
@@ -283,7 +267,7 @@ function injectAdShield(webContents){
  const task=(styleJobs.get(webContents)||Promise.resolve()).catch(()=>{}).then(async()=>{
   if(webContents.isDestroyed?.())return;
   const old=pageStyles.get(webContents);if(old){await webContents.removeInsertedCSS(old).catch(()=>{});pageStyles.delete(webContents);}
-  const config=getProtectionSettings(currentMode);if(!adBlockActive||!config.adBlock)return;
+  const config=getProtectionSettings(currentMode);if(!adBlockActive||!config.adBlock||!config.cosmeticFilter)return;
   try{const h=new URL(webContents.getURL()).hostname;if(h==="youtube.com"||h.endsWith(".youtube.com"))return;}catch{}
   const key=await webContents.insertCSS(AD_BLOCK_CSS).catch(()=>null);if(key)pageStyles.set(webContents,key);
  });styleJobs.set(webContents,task);return task;

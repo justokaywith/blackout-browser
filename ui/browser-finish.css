@@ -138,7 +138,7 @@ body > .menu { background: var(--finish-glass); border: 1px solid var(--finish-l
 .collection-page button { padding:8px 14px; border-radius:999px; font-size:12px; flex-shrink:0; }
 .collection-page #history-count { color:var(--finish-secondary); font-size:12px; white-space:nowrap; }
 .collection-page #download-location-path { display:block; color:var(--finish-secondary); font-size:12px; overflow-wrap:anywhere; margin-top:4px; }
-#device-access-indicator { color:var(--finish-text); border:1px solid var(--accent); background:rgba(var(--accent-rgb,154,122,255),.16); font-size:11px; border-radius:999px; padding:7px 10px; white-space:nowrap; }
+#device-access-indicator, #background-device-access-indicator { color:var(--finish-text); border:1px solid var(--accent); background:rgba(var(--accent-rgb,154,122,255),.16); font-size:11px; border-radius:10px; padding:7px 10px; white-space:nowrap; max-width:190px; overflow:hidden; text-overflow:ellipsis; }
 .dl-cancel-btn { border-radius:999px; padding:7px 12px; color:var(--finish-text); background:var(--finish-control); border:1px solid var(--finish-line); cursor:pointer; }
 .bookmarks-bar { padding-left:16px; gap:12px; }
 .bookmarks-list { gap:8px; }

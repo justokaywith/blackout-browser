@@ -3393,6 +3393,10 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // Browser-owned device permission controls. No website can dismiss this indicator.
 const accessIndicator = document.querySelector('#device-access-indicator');
+const backgroundAccessIndicator=document.createElement('button');
+backgroundAccessIndicator.id='background-device-access-indicator';backgroundAccessIndicator.type='button';backgroundAccessIndicator.hidden=true;backgroundAccessIndicator.className=accessIndicator?.className||'';
+accessIndicator?.insertAdjacentElement('afterend',backgroundAccessIndicator);
+let backgroundDeviceItems=[];
 window.blackout?.onState?.(state => {
  if(state.type !== 'device-access')return;
  const items=state.items || [];
@@ -3400,7 +3404,11 @@ window.blackout?.onState?.(state => {
  const types=new Set(items.flatMap(i=>i.types));
  accessIndicator.textContent=[types.has('video')?'Camera':'',types.has('audio')?'Mic':''].filter(Boolean).join(' + ')+' permitted';
  accessIndicator.title=items.map(i=>{try{return new URL(i.origin).hostname}catch{return 'Website'}}).join(', ')+' · Open permissions to stop access';
+ backgroundDeviceItems=state.backgroundItems||[];backgroundAccessIndicator.hidden=!backgroundDeviceItems.length;
+ backgroundAccessIndicator.textContent=`Other tabs: ${backgroundDeviceItems.length} device permission${backgroundDeviceItems.length===1?'':'s'}`;
+ backgroundAccessIndicator.title=backgroundDeviceItems.map(i=>{try{return new URL(i.origin).hostname}catch{return 'Website'}}).join(', ')+' · Switch to the first permitted tab. Permission does not mean recording is active.';
 });
+backgroundAccessIndicator.addEventListener('click',()=>{const item=backgroundDeviceItems[0];if(item?.tabId)window.blackout?.tab?.('switch',item.tabId);});
 accessIndicator?.addEventListener('click',()=>openSettingsTab('permissions'));
 for (const type of ['audio','video']) {
  const select=document.querySelector('#permission-'+type);

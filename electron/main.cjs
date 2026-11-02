@@ -155,7 +155,9 @@ function publishDeviceAccess(context) {
   if (!context) return;
   const live=new Set([...contexts.values()].flatMap(c=>[...c.tabs.values()].filter(t=>!t.closing&&t.view?.webContents&&!t.view.webContents.isDestroyed()).map(t=>t.view.webContents.id)));
   for(const id of deviceAccess.keys())if(!live.has(id))deviceAccess.delete(id);
-  sendState(context,{type:'device-access',items:[...deviceAccess.values()].filter(item=>item.contextId===context.id).map(({id,origin,types})=>({id,origin,types}))});
+  const activeId=context.activeTab?.view?.webContents?.id;
+  const items=[...deviceAccess.values()].filter(item=>item.contextId===context.id).map(({id,origin,types})=>({id,origin,types,tabId:[...context.tabs.values()].find(t=>t.view?.webContents?.id===id)?.id}));
+  sendState(context,{type:'device-access',items:items.filter(item=>item.id===activeId),backgroundItems:items.filter(item=>item.id!==activeId)});
 }
 const sitePermissions = createSitePermissions({dialog,
   findWindow: wc => contextForPage(wc)?.window,
@@ -370,21 +372,21 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-fam
     <i class="dot dot-light"></i>
     <div class="meta">
       <b>Light <small>Aurora Teal</small></b>
-      <p>Standard browsing · Full compatibility</p>
+      <p>Network filter · Fewer page changes</p>
     </div>
   </button>
   <button type="button" class="item ${currentMode === 'balanced' ? 'active' : ''}" data-mode="balanced">
     <i class="dot dot-balanced"></i>
     <div class="meta">
       <b>Balanced <small>Eclipse Violet</small></b>
-      <p>Secure browsing · YouTube &amp; web ad block</p>
+      <p>Network + page filters · YouTube compatible</p>
     </div>
   </button>
   <button type="button" class="item ${currentMode === 'extra' ? 'active' : ''}" data-mode="extra">
     <i class="dot dot-extra"></i>
     <div class="meta">
       <b>Extra <small>Ember Flame</small></b>
-      <p>Hardened security · No tracking · Retains logins</p>
+      <p>Extra privacy controls · May affect some sites</p>
     </div>
   </button>
 </div>
@@ -1401,6 +1403,7 @@ function switchTab(context, id) {
     updateViewBounds(context);
   }
   publishTab(context, tab);
+  publishDeviceAccess(context);
   if (!tab.url) sendState(context, { type: 'empty' });
   sendTabs(context);
   return true;
