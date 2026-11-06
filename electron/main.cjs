@@ -1,5 +1,5 @@
 const closedWindows=require('./closed-windows.cjs');
-const { app, BrowserWindow, WebContentsView, ipcMain, protocol, session, net, Menu, MenuItem, clipboard, dialog, shell } = require('electron');
+const { app, BrowserWindow, WebContentsView, ipcMain, protocol, session, net, Menu, MenuItem, clipboard, dialog, shell, desktopCapturer } = require('electron');
 const fs = require('node:fs');
 const {createFaviconResolver}=require('./favicons.cjs');
 const resolveFavicon=createFaviconResolver((...args)=>net.fetch(...args));
@@ -672,8 +672,24 @@ function browserSessionFor(mode) {
   if (cleanUa) {
     browserSession.setUserAgent(cleanUa);
   }
+
+  // Enable Screen Sharing for web meetings & conferences
+  if (typeof browserSession.setDisplayMediaRequestHandler === 'function') {
+    browserSession.setDisplayMediaRequestHandler((request, callback) => {
+      desktopCapturer.getSources({ types: ['screen', 'window'] }).then(sources => {
+        if (!sources || !sources.length) {
+          callback({});
+          return;
+        }
+        callback({ video: sources[0] });
+      }).catch(err => {
+        console.error('DisplayMedia error:', err);
+        callback({});
+      });
+    });
+  }
   browserSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
-    if (['fullscreen', 'clipboard-sanitized-write'].includes(permission)) {
+    if (['fullscreen', 'clipboard-sanitized-write', 'display-capture'].includes(permission)) {
       return callback(true);
     }
     const requests = permissionRequests.get(webContents.id) || [];
@@ -794,7 +810,7 @@ function browserSessionFor(mode) {
       }
     });
   });
-  browserSession.setPermissionCheckHandler((wc,permission,origin,details)=>permission==='notifications'?notificationPermissions.check(wc,origin,mode==='incognito'):sitePermissions.check(wc,permission,origin,details));
+  browserSession.setPermissionCheckHandler((wc,permission,origin,details)=>permission==='display-capture'?true:(permission==='notifications'?notificationPermissions.check(wc,origin,mode==='incognito'):sitePermissions.check(wc,permission,origin,details)));
   browserSession.on('select-webauthn-account', async (_event, details, callback) => {
     try {
       if (!details.frame || !details.accounts.length) return callback();

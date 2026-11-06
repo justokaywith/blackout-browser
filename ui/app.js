@@ -247,6 +247,7 @@ $$('[data-action]').forEach(button=>button.addEventListener('click',()=>{
     welcome.hidden = Boolean(activeUrl);
   }
   if (button.dataset.action === 'new-tab') {
+    closeSettingsTab();
     address.value = '';
     activeUrl = '';
     welcome.hidden = false;
@@ -1035,8 +1036,12 @@ function renderTabs(state){
     const icon=document.createElement('img');
     icon.className='tab-icon';
     icon.alt='';
-    icon.src = tab.url ? favoriteIconUrl(tab.url) : './blackout-mark.svg';
-    icon.onerror = () => { icon.onerror=null;icon.src = './site-globe.svg'; };
+    if (tab.url) {
+      icon.src = favoriteIconUrl(tab.url);
+      icon.onerror = () => { icon.onerror=null; icon.src = './site-globe.svg'; };
+    } else {
+      icon.style.display = 'none';
+    }
     icon.draggable=false;icon.addEventListener('dblclick',()=>window.blackout?.tab('close',tab.id));
     const select=document.createElement('button');
     select.className='tab-select';
@@ -1080,7 +1085,7 @@ function renderTabs(state){
     const settingsIcon = document.createElement('img');
     settingsIcon.className = 'tab-icon';
     settingsIcon.alt = '';
-    settingsIcon.src = './blackout-mark.svg';
+    settingsIcon.style.display = 'none';
     const settingsSelect = document.createElement('button');
     settingsSelect.className = 'tab-select';
     settingsSelect.type = 'button';
@@ -1263,6 +1268,7 @@ if (!window.blackout) {
         address.select();
       }, 30);
     } else if (state.type === 'empty') {
+      closeSettingsTab();
       welcome.hidden = false;
       address.value = '';
       activeUrl = '';
@@ -3627,3 +3633,6 @@ function initSettingsRedesign() {
   }
 }
 initSettingsRedesign();
+
+// Ensure settings is hidden initially
+closeSettingsTab();
