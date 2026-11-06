@@ -27,11 +27,14 @@ document.documentElement.style.setProperty('--mood-accent', tc.accent);
 document.documentElement.style.setProperty('--mood-glow', tc.glow);
 window.blackout?.setUiAppearance?.({theme:appearance.theme}).catch(()=>{});
 document.dispatchEvent(new CustomEvent('blackout-theme-change',{detail:{theme:appearance.theme}}));
-$('#settings-theme').value=appearance.theme;$('#surface-mode').value=appearance.surface;$('#motion-mode').value=appearance.motion;try{localStorage.setItem('blackout-appearance',JSON.stringify(appearance))}catch{}}
+const themeEl=$('#settings-theme');if(themeEl)themeEl.value=appearance.theme;
+const surfaceEl=$('#surface-mode');if(surfaceEl)surfaceEl.value=appearance.surface;
+const motionEl=$('#motion-mode');if(motionEl)motionEl.value=appearance.motion;
+try{localStorage.setItem('blackout-appearance',JSON.stringify(appearance))}catch{}}
 applyAppearance();
-$('#settings-theme').addEventListener('change',e=>applyAppearance({theme:e.target.value}));
-$('#surface-mode').addEventListener('change',e=>applyAppearance({surface:e.target.value}));
-$('#motion-mode').addEventListener('change',e=>applyAppearance({motion:e.target.value}));
+$('#settings-theme')?.addEventListener('change',e=>applyAppearance({theme:e.target.value}));
+$('#surface-mode')?.addEventListener('change',e=>applyAppearance({surface:e.target.value}));
+$('#motion-mode')?.addEventListener('change',e=>applyAppearance({motion:e.target.value}));
 const startup=$('#startup-sequence');
 const startupBar=$('#startup-progress-bar');
 const startupLabel=$('#startup-progress-label');
@@ -550,7 +553,11 @@ function renderFavorites(items,writable){
       if (!badgeLetter) {
         badgeLetter = (item.title || hostStr || 'W').trim().charAt(0).toUpperCase();
       }
-      iconBadge.style.backgroundColor = badgeColor;
+      if (iconBadge.style.setProperty) {
+        iconBadge.style.setProperty('background-color', badgeColor, 'important');
+      } else {
+        iconBadge.style.backgroundColor = badgeColor;
+      }
       iconBadge.setAttribute('data-letter', badgeLetter);
       iconBadge.style.color = '#ffffff';
 
@@ -3572,6 +3579,9 @@ function applyAccentColor(color) {
   $$('#accent-swatches button').forEach(btn => {
     btn.classList.toggle('active', (btn.dataset.color || '').toLowerCase() === color.toLowerCase());
   });
+  const themeMap = { '#ff7a45': 'ember', '#4da3ff': 'midnight', '#3ddc97': 'aurora', '#b48cff': 'noir' };
+  const th = themeMap[(color || '').toLowerCase()];
+  if (th) applyAppearance({ theme: th });
 }
 
 function applyNewtabBg(bg) {
