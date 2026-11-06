@@ -1,4 +1,4 @@
-const {privacyHeaders}=require('./browser-identity.cjs');
+const {privacyHeaders, isGoogleAuthUrl}=require('./browser-identity.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -237,15 +237,18 @@ function applyProtectionToSession(browserSession, pageUrl = () => null) {
 
   // 2. Privacy & Anti-Tracking Header Controls
   browserSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    const requestHeaders = privacyHeaders(details.requestHeaders);
+    const requestHeaders = privacyHeaders(details.requestHeaders, undefined, details.url);
+    const isGoogleAuth = isGoogleAuthUrl(details.url);
 
     const isMainFrame = details.resourceType === 'mainFrame' || details.resourceType === 'main_frame';
-    if (config.stripReferrer && !isMainFrame && crossOrigin(details))removeHeaders(requestHeaders,['referer']);
-    if(config.blockThirdPartyCookies&&!isMainFrame&&crossOrigin(details))removeHeaders(requestHeaders,['cookie']);
+    if (!isGoogleAuth) {
+      if (config.stripReferrer && !isMainFrame && crossOrigin(details)) removeHeaders(requestHeaders, ['referer']);
+      if (config.blockThirdPartyCookies && !isMainFrame && crossOrigin(details)) removeHeaders(requestHeaders, ['cookie']);
 
-    // Strip client hint tracking in Extra mode
-    if (currentMode === 'extra') {
-      removeHeaders(requestHeaders,['sec-ch-ua-model','sec-ch-ua-platform-version']);
+      // Strip client hint tracking in Extra mode
+      if (currentMode === 'extra') {
+        removeHeaders(requestHeaders, ['sec-ch-ua-model', 'sec-ch-ua-platform-version']);
+      }
     }
 
     callback({ requestHeaders });
@@ -255,8 +258,11 @@ function applyProtectionToSession(browserSession, pageUrl = () => null) {
   browserSession.webRequest.onHeadersReceived((details, callback) => {
     const responseHeaders = { ...details.responseHeaders };
     const isMainFrame = details.resourceType === 'mainFrame' || details.resourceType === 'main_frame';
+    const isGoogleAuth = isGoogleAuthUrl(details.url);
 
-    if (config.blockThirdPartyCookies && !isMainFrame && crossOrigin(details))removeHeaders(responseHeaders,['set-cookie']);
+    if (!isGoogleAuth && config.blockThirdPartyCookies && !isMainFrame && crossOrigin(details)) {
+      removeHeaders(responseHeaders, ['set-cookie']);
+    }
 
     callback({ responseHeaders });
   });

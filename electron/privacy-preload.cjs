@@ -5,6 +5,21 @@ const MODERN_CHROME_MAJOR = '134';
 
 contextBridge.executeInMainWorld({
   func: () => {
+    // 0. Identity & Authentication Provider Whitelist
+    // Never tamper with Navigator prototype or add JS getters on Google, Microsoft, Apple, or identity flows.
+    // BotGuard, WebAuthn, and identity verifiers test native descriptors on Navigator.prototype.
+    try {
+      const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+      const authList = [
+        'google.com', 'accounts.google.com', 'gstatic.com', 'googleapis.com',
+        'apple.com', 'appleid.apple.com', 'live.com', 'microsoft.com',
+        'microsoftonline.com', 'github.com', 'auth0.com', 'okta.com'
+      ];
+      if (authList.some(d => host === d || host.endsWith('.' + d))) {
+        return;
+      }
+    } catch {}
+
     // 1. Privacy Standards
     for (const [key, value] of [['doNotTrack', '1'], ['globalPrivacyControl', true]]) {
       try {

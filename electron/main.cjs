@@ -35,7 +35,7 @@ const { readDownloads, saveDownloads } = require('./download-history.cjs');
 const { createSitePermissions } = require('./site-permissions.cjs');
 const { applyTabGroup, moveTab } = require('./tab-groups.cjs');
 const { launchInstaller } = require('./installer-launch.cjs');
-const {browserUserAgent}=require('./browser-identity.cjs');
+const {browserUserAgent, GOOGLE_AUTH_USER_AGENT, isGoogleAuthUrl}=require('./browser-identity.cjs');
 const {createNotificationPermissions}=require('./notification-permissions.cjs');
 const windowsIntegration=require('./windows-integration.cjs');
 if(process.platform==='win32')app.setAppUserModelId(windowsIntegration.APP_ID);
@@ -811,7 +811,16 @@ function browserSessionFor(mode) {
 }
 
 function guardRemoteContents(context, contents) {
-  contents.on('did-start-navigation', (_event,_url,inPlace,isMainFrame) => { if (isMainFrame && !inPlace) sitePermissions.clear(contents); });
+  contents.on('did-start-navigation', (_event, url, inPlace, isMainFrame) => {
+    if (isMainFrame && !inPlace) sitePermissions.clear(contents);
+    if (isMainFrame && typeof url === 'string') {
+      if (isGoogleAuthUrl(url)) {
+        contents.setUserAgent(GOOGLE_AUTH_USER_AGENT);
+      } else {
+        contents.setUserAgent(getCleanUserAgent());
+      }
+    }
+  });
   contents.once('destroyed', () => { sitePermissions.clear(contents,true); });
   contents.on('will-navigate', (event, targetUrl) => {
     try {
@@ -891,6 +900,15 @@ function guardRemoteContents(context, contents) {
 
   contents.on('did-create-window', (childWindow) => {
     installKeyboardShortcuts(childWindow.webContents, context);
+    childWindow.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
+      if (isMainFrame && typeof url === 'string') {
+        if (isGoogleAuthUrl(url)) {
+          childWindow.webContents.setUserAgent(GOOGLE_AUTH_USER_AGENT);
+        } else {
+          childWindow.webContents.setUserAgent(getCleanUserAgent());
+        }
+      }
+    });
     childWindow.webContents.on('will-redirect', (event, targetUrl) => {
       try {
         const parsed = new URL(targetUrl);
@@ -2492,9 +2510,10 @@ app.whenReady().then(async () => {
 });
 
 app.on('child-process-gone', (_event, details) => {
-  if (details.type !== 'Utility') {
+  const title=require('./crash-diagnostics.cjs').childExitReport(details);
+  if (title) {
     log(`Child process gone: ${details.type} (${details.reason})`);
-    showCrashReportWindow(`Browser Process Crashed (${details.type}: ${details.reason})`, details);
+    showCrashReportWindow(title, details);
   }
 });
 
