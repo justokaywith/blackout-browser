@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('blackout', Object.freeze({
   reportCrash: (data) => ipcRenderer.invoke('browser:report-crash', data),
   setProtectionMode: (mode) => ipcRenderer.invoke('browser:set-protection-mode', mode),
   getProtectionMode: () => ipcRenderer.invoke('browser:get-protection-mode'),
+  getAdBlockState: () => ipcRenderer.invoke('browser:get-adblock-state'),
+  toggleAdBlock: (explicitVal) => ipcRenderer.invoke('browser:toggle-adblock', explicitVal),
   setProxy: (config) => ipcRenderer.invoke('browser:set-proxy', config),
   parseWireGuard: (raw) => ipcRenderer.invoke('browser:wireguard-parse', raw),
   toggleProtectionMenu: (anchorBounds) => ipcRenderer.invoke('browser:toggle-protection-menu', anchorBounds),

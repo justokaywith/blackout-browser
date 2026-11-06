@@ -297,15 +297,26 @@ if(siteInfoButton)siteInfoButton.addEventListener('click',showSiteInfo);
 $('#site-info-close').addEventListener('click',hideSiteInfo);
 document.addEventListener('pointerdown',event=>{if(!siteInfoPanel.hidden&&!siteInfoPanel.contains(event.target)&&!siteInfoButton?.contains(event.target))hideSiteInfo();});
 
+const DEFAULT_MOCKUP_FAVORITES = [
+  { id: 'fav-1', title: 'youtube.com', url: 'https://youtube.com', color: '#e5484d' },
+  { id: 'fav-2', title: 'WhatsApp', url: 'https://web.whatsapp.com', color: '#2fb36b' },
+  { id: 'fav-3', title: 'AHrefs', url: 'https://ahrefs.com', color: '#d98a1f' },
+  { id: 'fav-4', title: 'LinkedIn', url: 'https://linkedin.com', color: '#2d6fd6' },
+  { id: 'fav-5', title: 'Claude', url: 'https://claude.ai', color: '#d9633e' },
+  { id: 'fav-6', title: 'Analytics', url: 'https://analytics.google.com', color: '#16a394' },
+  { id: 'fav-7', title: 'Zoho', url: 'https://zoho.com', color: '#2d8cff' },
+  { id: 'fav-8', title: 'Pactuno', url: 'https://pactuno.online', color: '#7c5ce0' },
+  { id: 'fav-9', title: 'Partner', url: 'https://pactuno.online/partner', color: '#e0562b' },
+  { id: 'fav-10', title: 'Relay', url: 'https://relay.pactuno.online', color: '#4f6bff' }
+];
+
 function loadLocalFavorites() {
   try {
-    if (!localStorage.getItem('blackout-v021-purged')) {
-      localStorage.removeItem('blackout-local-favorites');
-      localStorage.setItem('blackout-v021-purged', 'true');
-      return [];
-    }
-    return JSON.parse(localStorage.getItem('blackout-local-favorites')) || [];
-  } catch { return []; }
+    const raw = localStorage.getItem('blackout-local-favorites');
+    if (!raw) return DEFAULT_MOCKUP_FAVORITES;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length ? parsed : DEFAULT_MOCKUP_FAVORITES;
+  } catch { return DEFAULT_MOCKUP_FAVORITES; }
 }
 function saveLocalFavorites(items) {
   try {
@@ -320,9 +331,11 @@ async function refreshFavorites(){
   }
   try{
     const result=await window.blackout.favorites('list');
-    renderFavorites(result.items, result.writable);
+    let items = result.items;
+    if (!items || !items.length) items = DEFAULT_MOCKUP_FAVORITES;
+    renderFavorites(items, result.writable);
   }catch{
-    renderFavorites([],false);
+    renderFavorites(DEFAULT_MOCKUP_FAVORITES, false);
   }
 }
 
@@ -508,7 +521,38 @@ function renderFavorites(items,writable){
       let hostName = item.url;
       try { hostName = new URL(item.url).hostname.replace(/^www\./, ''); } catch {}
       iconBadge.textContent = '';
-      iconBadge.style.color = item.color || 'var(--accent)';
+      
+      const hostStr = (hostName || '').toLowerCase();
+      const itemTitle = (item.title || '').toLowerCase();
+      let badgeColor = item.color;
+      let badgeLetter = '';
+
+      if (hostStr.includes('youtube.com')) { badgeColor = badgeColor || '#E5484D'; badgeLetter = 'Y'; }
+      else if (hostStr.includes('whatsapp.com')) { badgeColor = badgeColor || '#2FB36B'; badgeLetter = 'W'; }
+      else if (hostStr.includes('ahrefs.com')) { badgeColor = badgeColor || '#D98A1F'; badgeLetter = 'A'; }
+      else if (hostStr.includes('linkedin.com')) { badgeColor = badgeColor || '#2D6FD6'; badgeLetter = 'L'; }
+      else if (hostStr.includes('claude.ai')) { badgeColor = badgeColor || '#D9633E'; badgeLetter = 'C'; }
+      else if (hostStr.includes('privatusanalytics.com') || hostStr.includes('analytics.google.com') || itemTitle.includes('analytics')) { badgeColor = badgeColor || '#16A394'; badgeLetter = 'P'; }
+      else if (hostStr.includes('zoho.com')) { badgeColor = badgeColor || '#2D8CFF'; badgeLetter = 'Z'; }
+      else if (hostStr.includes('relay.pactuno.online')) { badgeColor = badgeColor || '#4F6BFF'; badgeLetter = 'R'; }
+      else if (hostStr.includes('partner.microsoft.com') || itemTitle.includes('partner')) { badgeColor = badgeColor || '#E0562B'; badgeLetter = 'P'; }
+      else if (hostStr.includes('pactuno.online')) { badgeColor = badgeColor || '#7C5CE0'; badgeLetter = 'P'; }
+      else if (hostStr.includes('github.com')) { badgeColor = badgeColor || '#2D6FD6'; badgeLetter = 'G'; }
+      else if (hostStr.includes('google.com') || hostStr.includes('gmail.com')) { badgeColor = badgeColor || '#E5484D'; badgeLetter = 'G'; }
+
+      if (!badgeColor) {
+        const palette = ['#E5484D', '#2FB36B', '#D98A1F', '#2D6FD6', '#D9633E', '#16A394', '#2D8CFF', '#7C5CE0', '#E0562B', '#4F6BFF'];
+        let h = 0;
+        for (let i = 0; i < hostStr.length; i++) h = ((h << 5) - h) + hostStr.charCodeAt(i);
+        badgeColor = palette[Math.abs(h) % palette.length];
+      }
+      if (!badgeLetter) {
+        badgeLetter = (item.title || hostStr || 'W').trim().charAt(0).toUpperCase();
+      }
+      iconBadge.style.backgroundColor = badgeColor;
+      iconBadge.setAttribute('data-letter', badgeLetter);
+      iconBadge.style.color = '#ffffff';
+
       const iconImage=document.createElement('img');
       iconImage.className='favorite-icon';
       iconImage.alt='';
@@ -520,7 +564,10 @@ function renderFavorites(items,writable){
       const content = document.createElement('div');
       content.className = 'favorite-content';
       const title=document.createElement('b');
-      title.textContent=item.title;
+      let displayTitle = item.title;
+      if (displayTitle === 'Private Analytics') displayTitle = 'Analytics';
+      else if (displayTitle === 'Partner Center') displayTitle = 'Partner';
+      title.textContent = displayTitle;
       const host=document.createElement('small');
       host.textContent = hostName;
       content.append(title,host);
@@ -3508,3 +3555,75 @@ $('#tab-group-create')?.addEventListener('submit',async event=>{
 
 window.blackout?.runtimeInfo?.().then(info=>{const el=document.querySelector('#runtime-version');if(el&&info)el.textContent='Chromium '+info.chromium+' · Electron '+info.electron+' · '+info.platform;}).catch(()=>{});
 
+
+
+// =========================================================
+// Settings Redesign Preferences & Customization
+// =========================================================
+function applyAccentColor(color) {
+  document.documentElement.style.setProperty('--accent', color);
+  try { localStorage.setItem('blackout-accent-color', color); } catch {}
+  $$('#accent-swatches button').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.color || '').toLowerCase() === color.toLowerCase());
+  });
+}
+
+function applyNewtabBg(bg) {
+  document.documentElement.dataset.newtabBg = bg;
+  try { localStorage.setItem('blackout-newtab-bg', bg); } catch {}
+  $$('#newtab-bg-selector button').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.bg || '') === bg);
+  });
+}
+
+function initSettingsRedesign() {
+  const savedAccent = (function(){ try { return localStorage.getItem('blackout-accent-color') || '#FF7A45'; } catch { return '#FF7A45'; } })();
+  applyAccentColor(savedAccent);
+
+  $$('#accent-swatches button').forEach(button => {
+    button.addEventListener('click', () => {
+      const color = button.dataset.color || '#FF7A45';
+      applyAccentColor(color);
+    });
+  });
+
+  const savedBg = (function(){ try { return localStorage.getItem('blackout-newtab-bg') || 'grid'; } catch { return 'grid'; } })();
+  applyNewtabBg(savedBg);
+
+  $$('#newtab-bg-selector button').forEach(button => {
+    button.addEventListener('click', () => {
+      const bg = button.dataset.bg || 'grid';
+      applyNewtabBg(bg);
+    });
+  });
+
+  const animToggle = $('#toggle-animations');
+  const savedAnim = (function(){ try { return localStorage.getItem('blackout-grid-animations'); } catch { return null; } })();
+  const animEnabled = savedAnim !== 'false';
+  if (animToggle) {
+    animToggle.classList.toggle('active', animEnabled);
+    document.documentElement.classList.toggle('no-grid-animations', !animEnabled);
+    animToggle.addEventListener('click', () => {
+      const active = animToggle.classList.toggle('active');
+      document.documentElement.classList.toggle('no-grid-animations', !active);
+      try { localStorage.setItem('blackout-grid-animations', String(active)); } catch {}
+    });
+  }
+
+  const motionSlider = $('#motion-intensity');
+  const savedMotion = (function(){ try { return localStorage.getItem('blackout-motion-intensity') || '3'; } catch { return '3'; } })();
+  if (motionSlider) {
+    motionSlider.value = savedMotion;
+    motionSlider.addEventListener('input', e => {
+      try { localStorage.setItem('blackout-motion-intensity', e.target.value); } catch {}
+    });
+  }
+
+  const siteDataToggle = $('#toggle-site-data');
+  if (siteDataToggle) {
+    siteDataToggle.addEventListener('click', () => {
+      siteDataToggle.classList.toggle('active');
+    });
+  }
+}
+initSettingsRedesign();

@@ -1,0 +1,7 @@
+{
+  "name": "blackout-browser-installer",
+  "version": "0.2.38",
+  "description": "Blackout Browser Setup Installer",
+  "main": "main.cjs",
+  "private": true
+}

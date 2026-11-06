@@ -8,3 +8,6 @@ work/
 *.pem
 *.key
 vendor/*.exe
+
+.tmp-*
+test/.tmp-*

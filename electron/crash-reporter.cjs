@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, shell, clipboard } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
+const {diagnosticDetails}=require('./crash-diagnostics.cjs');
 
 let crashWindow = null;
 
@@ -21,7 +22,8 @@ function saveCrashLog(info) {
 }
 
 function formatDiagnosticReport(errorTitle, errorDetails) {
-  const stack = errorDetails?.stack || errorDetails?.message || String(errorDetails || 'Unknown error');
+  const stack = diagnosticDetails(errorDetails);
+  let graphics='Unavailable';try{if(app.isReady())graphics=JSON.stringify(app.getGPUFeatureStatus());}catch{}
   return [
     '=======================================================',
     '             BLACKOUT BROWSER CRASH REPORT             ',
@@ -34,6 +36,7 @@ function formatDiagnosticReport(errorTitle, errorDetails) {
     `Chrome Version: ${process.versions.chrome}`,
     `Total Memory: ${Math.round(os.totalmem() / 1024 / 1024)} MB`,
     `Free Memory: ${Math.round(os.freemem() / 1024 / 1024)} MB`,
+    `Graphics Feature Status: ${graphics}`,
     `Crash Reason: ${errorTitle}`,
     '-------------------------------------------------------',
     'STACK TRACE / DIAGNOSTIC DETAILS:',
@@ -54,7 +57,7 @@ function showCrashReportWindow(errorTitle, errorDetails) {
 
     global.__latestCrashData = {
       title: errorTitle,
-      details: errorDetails?.message || String(errorDetails || 'Unknown error'),
+      details: diagnosticDetails(errorDetails),
       report: reportText,
       logFile,
       supportEmail: 'support@pactuno.online'
@@ -115,7 +118,7 @@ function initCrashReporter() {
 
   ipcMain.handle('crash:restart', () => {
     app.relaunch();
-    app.exit(0);
+    app.quit(); // Run existing before-quit session preservation before restarting.
   });
 
   ipcMain.handle('crash:close', () => {

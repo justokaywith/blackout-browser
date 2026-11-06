@@ -1651,7 +1651,18 @@ function registerIpc() {
     let items = readFavorites(file);
     if (!items.length && !fs.existsSync(file)) {
       try {
-        items = [];
+        items = [
+          normalizeFavorite({ title: 'youtube.com', url: 'https://youtube.com', color: '#e5484d' }),
+          normalizeFavorite({ title: 'WhatsApp', url: 'https://web.whatsapp.com', color: '#2fb36b' }),
+          normalizeFavorite({ title: 'AHrefs', url: 'https://ahrefs.com', color: '#d98a1f' }),
+          normalizeFavorite({ title: 'LinkedIn', url: 'https://linkedin.com', color: '#2d6fd6' }),
+          normalizeFavorite({ title: 'Claude', url: 'https://claude.ai', color: '#d9633e' }),
+          normalizeFavorite({ title: 'Analytics', url: 'https://analytics.google.com', color: '#16a394' }),
+          normalizeFavorite({ title: 'Zoho', url: 'https://zoho.com', color: '#2d8cff' }),
+          normalizeFavorite({ title: 'Pactuno', url: 'https://pactuno.online', color: '#7c5ce0' }),
+          normalizeFavorite({ title: 'Partner', url: 'https://pactuno.online/partner', color: '#e0562b' }),
+          normalizeFavorite({ title: 'Relay', url: 'https://relay.pactuno.online', color: '#4f6bff' })
+        ];
         writeFavorites(file, items);
       } catch {}
     }
