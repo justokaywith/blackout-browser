@@ -1,6 +1,7 @@
 const {privacyHeaders, isGoogleAuthUrl}=require('./browser-identity.cjs');
 const fs = require('node:fs');
 const path = require('node:path');
+const adblockEngine = require('./adblock-engine.cjs');
 
 const AD_BLOCK_PATTERNS = [
   // Google & YouTube Ads (metadata, tracking, telemetry, break triggers)
@@ -80,7 +81,7 @@ const PROTECTION_MODES = {
     retainSessions: true,
     blockThirdPartyCookies: false,
     anonymityShield: false,
-    description: 'Known ad-network filtering without cosmetic page changes. The AdBlock toggle controls filtering.'
+    description: 'Filter-list network blocking plus targeted ad scriptlets (removes YouTube video ads). No cosmetic page hiding.'
   },
   balanced: {
     id: 'balanced',
@@ -92,7 +93,7 @@ const PROTECTION_MODES = {
     retainSessions: true,
     blockThirdPartyCookies: false,
     anonymityShield: false,
-    description: 'Known ad-network and cosmetic page filtering. YouTube compatibility may show ads.'
+    description: 'Filter-list network blocking, ad scriptlets (YouTube video ads) and cosmetic hiding of leftover ad slots.'
   },
   extra: {
     id: 'extra',
@@ -208,7 +209,16 @@ function applyProtectionToSession(browserSession, pageUrl = () => null) {
 
   // 1. Request Interception (Ad & Tracker Blocking)
   browserSession.webRequest.onBeforeRequest({ urls: ['<all_urls>'] }, (details, callback) => {
+    if (adBlockActive && config.adBlock && adblockEngine.available()) {
+      // Filter lists (EasyList/EasyPrivacy/uBlock). Video streams and main-frame navigations are never blocked.
+      let verdict = null;
+      try { verdict = adblockEngine.matchRequest(details); } catch {}
+      if (verdict) { adsBlockedCount++; recordNetworkActivity(details, true); return callback(verdict); }
+      recordNetworkActivity(details, false);
+      return callback({ cancel: false });
+    }
     if (adBlockActive && config.adBlock) {
+      // Fallback built-in list when the engine cannot load.
       const url = details.url.toLowerCase();
       // Compatibility exception: keep video/ad playback contracts intact on YouTube.
       // This is intentionally not advertised as undetectable video-ad blocking.
@@ -263,9 +273,18 @@ function applyProtectionToSession(browserSession, pageUrl = () => null) {
     if (!isGoogleAuth && config.blockThirdPartyCookies && !isMainFrame && crossOrigin(details)) {
       removeHeaders(responseHeaders, ['set-cookie']);
     }
+    if (!isGoogleAuth && adBlockActive && config.adBlock) { try { adblockEngine.applyCsp(details, responseHeaders); } catch {} }
 
     callback({ responseHeaders });
   });
+
+  // 4. Cosmetic styles + scriptlets through the engine preload (gated live by the current settings).
+  try {
+    adblockEngine.attachCosmetics(browserSession, () => {
+      const live = getProtectionSettings(currentMode);
+      return { scripts: adBlockActive && !!live.adBlock, styles: adBlockActive && !!live.adBlock && !!live.cosmeticFilter };
+    });
+  } catch (error) { console.error('[blackout] cosmetic filters unavailable', error?.message || error); }
 }
 
 const pageStyles=new WeakMap(),styleJobs=new WeakMap();
@@ -294,5 +313,6 @@ module.exports = {
   recordNetworkActivity,
   getTrackerActivity,
   getAdsBlockedCount: () => adsBlockedCount,
-  getCurrentProtectionMode: () => currentMode
+  getCurrentProtectionMode: () => currentMode,
+  getAdblockEngineInfo: () => ({ available: adblockEngine.available(), ...(adblockEngine.info() || {}) })
 };

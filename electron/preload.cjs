@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('blackout', Object.freeze({
   navigate: (address, searchEngine) => ipcRenderer.invoke('browser:navigate', address, searchEngine),
   control: (action) => ipcRenderer.invoke('browser:control', action),
+  find: (text, options) => ipcRenderer.invoke('browser:find', text, options),
+  pageCommand: (action) => ipcRenderer.invoke('browser:page-command', action),
   openIncognito: () => ipcRenderer.invoke('browser:incognito'),
   settings: (open) => ipcRenderer.invoke('browser:settings', open),
   modal: (open) => ipcRenderer.invoke('browser:modal', open),

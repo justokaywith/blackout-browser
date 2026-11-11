@@ -1,6 +1,6 @@
 {
   "name": "@pactuno/blackout-browser",
-  "version": "0.2.41",
+  "version": "0.2.42",
   "private": true,
   "description": "Early-access Pactuno Blackout Browser desktop shell",
   "main": "electron/main.cjs",
@@ -55,5 +55,8 @@
       "uninstallerSidebar": "build/installerSidebar.bmp",
       "include": "build/installer.nsh"
     }
+  },
+  "dependencies": {
+    "@ghostery/adblocker-electron": "^2.20.3"
   }
 }

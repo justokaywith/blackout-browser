@@ -1,9 +1,13 @@
 const closedWindows=require('./closed-windows.cjs');
 const { app, BrowserWindow, WebContentsView, ipcMain, protocol, session, net, Menu, MenuItem, clipboard, dialog, shell, desktopCapturer } = require('electron');
 const fs = require('node:fs');
+const path = require('node:path');
+const requestExternalApp=require('./external-apps.cjs').createExternalAppOpener({dialog,shell});
+const popupPermissions=require('./popup-permissions.cjs').createPopupPermissions({read:()=>JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),'popup-permissions.json'),'utf8')),save:rules=>{const f=path.join(app.getPath('userData'),'popup-permissions.json');fs.writeFileSync(f+'.tmp',JSON.stringify(rules));fs.renameSync(f+'.tmp',f);}});
+const pendingPopupPrompts=new WeakSet();
 const {createFaviconResolver}=require('./favicons.cjs');
 const resolveFavicon=createFaviconResolver((...args)=>net.fetch(...args));
-const path = require('node:path');
+
 const { pathToFileURL } = require('node:url');
 const { randomUUID } = require('node:crypto');
 const { spawn } = require('node:child_process');
@@ -108,6 +112,8 @@ app.commandLine.appendSwitch('disable-sync');
 app.commandLine.appendSwitch('no-pings');
 app.commandLine.appendSwitch('webrtc-ip-handling-policy', 'disable_non_proxied_udp');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+app.commandLine.appendSwitch('try-supported-channel-layouts');
+app.commandLine.appendSwitch('disable-features', 'AudioServiceDuckOthers');
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'blackout', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
@@ -328,7 +334,7 @@ function showSiteInfoPopup(context, info) {
   const privacy = info.url ? `${info.cookies || 0} cookie${info.cookies === 1 ? '' : 's'} · ${getTrackerActivity(context.activeTab.view.webContents.id).blockedRequests} tracker/ad requests blocked` : 'No site data available.';
   const deviceState=sitePermissions.pageState(context.activeTab.view.webContents);
   const controls=['audio','video'].map(type=>`<label>${type==='audio'?'Microphone':'Camera'}<select data-device="${type}" aria-label="${type==='audio'?'Microphone':'Camera'} permission">${['ask','allow','block'].map(value=>`<option value="${value}" ${deviceState[type]===value?'selected':''}>${{ask:'Ask',allow:'Allow for this page',block:'Block'}[value]}</option>`).join('')}</select></label>`).join('');
-  const page = `<!doctype html><meta charset="utf-8"><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;color:#f4f1ff;font:13px Inter,Segoe UI,sans-serif}main{box-sizing:border-box;width:100%;height:100%;padding:10px;border:1px solid #3b3c4c;border-radius:12px;background:#171822;box-shadow:0 20px 45px #000c}.item{padding:9px 10px;margin-top:7px;border:1px solid #30313f;border-radius:9px;background:#10111a;line-height:1.35}.item:first-child{margin-top:0}.label{display:block;margin-bottom:3px;color:#77e4c4;font-size:9px;letter-spacing:.1em}</style><main><div class="item"><span class="label">CONNECTION</span>${escapeSiteInfo(connection)}</div><div class="item"><span class="label">PERMISSIONS</span>${controls}<p id="device-status">Windows device privacy settings also apply. Allow lasts until navigation. Block lasts for this site in this tab.</p></div><div class="item"><span class="label">PRIVACY</span>${escapeSiteInfo(privacy)}<p>Location blocked · Do Not Track on · GPC on. Your public IP is still visible.</p></div></main><style>html,body{overflow:auto}main{height:auto;min-height:100%;border-radius:20px;background:#22232df5}label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}select{max-width:190px;padding:8px;border:1px solid #ffffff24;border-radius:10px;background:#30313e;color:#fff}p{font-size:11px;color:#bfc1ce;line-height:1.5}</style><script>document.querySelectorAll("[data-device]").forEach(select=>select.addEventListener("change",async()=>{try{const result=await window.siteControls.set(select.dataset.device,select.value);document.getElementById("device-status").textContent=result?"Saved. Try the camera or microphone again.":"Not applied. This page may have changed, or access is globally blocked.";}catch{document.getElementById("device-status").textContent="Could not change permission.";}}));</script>`;
+  const page = `<!doctype html><meta charset="utf-8"><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent;color:#f4f1ff;font:13px Inter,Segoe UI,sans-serif}main{box-sizing:border-box;width:100%;height:100%;padding:10px;border:1px solid #3b3c4c;border-radius:12px;background:#171822;box-shadow:0 20px 45px #000c}.item{padding:9px 10px;margin-top:7px;border:1px solid #30313f;border-radius:9px;background:#10111a;line-height:1.35}.item:first-child{margin-top:0}.label{display:block;margin-bottom:3px;color:#77e4c4;font-size:9px;letter-spacing:.1em}</style><main><div class="item"><span class="label">CONNECTION</span>${escapeSiteInfo(connection)}</div><div class="item"><span class="label">PERMISSIONS</span>${controls}<label>Pop-ups<select data-device="popups"><option value="block" ${popupPermissions.get(context.profile.mode,context.activeTab.view.webContents.getURL())==='block'?'selected':''}>Block</option><option value="allow" ${popupPermissions.get(context.profile.mode,context.activeTab.view.webContents.getURL())==='allow'?'selected':''}>Allow on this website</option></select></label><p id="device-status">Windows device privacy settings also apply. Allow lasts until navigation. Block lasts for this site in this tab.</p></div><div class="item"><span class="label">PRIVACY</span>${escapeSiteInfo(privacy)}<p>Location blocked · Do Not Track on · GPC on. Your public IP is still visible.</p></div></main><style>html,body{overflow:auto}main{height:auto;min-height:100%;border-radius:20px;background:#22232df5}label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}select{max-width:190px;padding:8px;border:1px solid #ffffff24;border-radius:10px;background:#30313e;color:#fff}p{font-size:11px;color:#bfc1ce;line-height:1.5}</style><script>document.querySelectorAll("[data-device]").forEach(select=>select.addEventListener("change",async()=>{try{const result=await window.siteControls.set(select.dataset.device,select.value);document.getElementById("device-status").textContent=result?"Saved. Try the website action again.":"Not applied. This page may have changed, or access is globally blocked.";}catch{document.getElementById("device-status").textContent="Could not change permission.";}}));</script>`;
   const popup = new BrowserWindow({ parent: context.window, frame: false, transparent: true, backgroundColor: '#00000000', resizable: false, movable: false, skipTaskbar: true, alwaysOnTop: true, show: false, width: 400, height: 370, x: source.x + 190, y: source.y + (context.bookmarksBarVisible ? 118 : 86), webPreferences: { preload:path.join(__dirname,'site-popup-preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
   context.siteInfoPopup = popup;
   popup.sitePage=context.activeTab.view.webContents;
@@ -654,6 +660,8 @@ function installKeyboardShortcuts(contents, context, isChrome = false) {
     else if (!isChrome && context.activeTab && action === 'zoom-out') adjustTabZoom(context.activeTab, -0.1);
     else if (!isChrome && context.activeTab && action === 'zoom-reset') context.activeTab.view.webContents.setZoomFactor(1);
     else if (action === 'toggle-fullscreen') context.window.setFullScreen(!context.window.isFullScreen());
+    else if (action === 'find-next') sendState(context, { type: 'find-next' });
+    else if (['find', 'print', 'devtools', 'save-page', 'screenshot'].includes(action)) pageCommand(context, action).catch(error => log('Page tool failed: ' + error.message));
   });
 }
 
@@ -846,6 +854,7 @@ function guardRemoteContents(context, contents) {
       const parsed = new URL(targetUrl);
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:' && parsed.protocol !== 'file:') {
         event.preventDefault();
+        void requestExternalApp(context.window,contents,targetUrl);
         return;
       }
       if (parsed.protocol === 'file:') {
@@ -874,6 +883,7 @@ function guardRemoteContents(context, contents) {
       const parsed = new URL(targetUrl);
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:' && parsed.protocol !== 'file:') {
         event.preventDefault();
+        void requestExternalApp(context.window,contents,targetUrl);
       }
     } catch {
       event.preventDefault();
@@ -886,12 +896,20 @@ function guardRemoteContents(context, contents) {
     try {
       const parsed = new URL(url);
       if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        void requestExternalApp(context.window,contents,url);
         return { action: 'deny' };
       }
       const isPopup = disposition === 'new-window'
         || Boolean(features && /width=|height=/i.test(features))
         || /accounts\.google\.com|appleid\.apple\.com|login\.microsoftonline\.com|github\.com\/login/i.test(url);
 
+      if (isPopup && popupPermissions.get(context.profile.mode,contents.getURL()) !== 'allow') {
+        if(!pendingPopupPrompts.has(contents)){
+          const source=contents.getURL();pendingPopupPrompts.add(contents);
+          dialog.showMessageBox(context.window,{type:'question',title:'Pop-up blocked',message:'Allow pop-ups on this website?',detail:new URL(source).origin+'\nAfter allowing, click the website button again. Change this permission from site information beside the address bar.',buttons:['Keep blocked','Allow pop-ups'],defaultId:0,cancelId:0}).then(({response})=>{if(response===1&&!contents.isDestroyed()&&contents.getURL()===source)popupPermissions.set(context.profile.mode,source,'allow');}).catch(()=>{}).finally(()=>pendingPopupPrompts.delete(contents));
+        }
+        return {action:'deny'};
+      }
       if (isPopup) {
         return {
           action: 'allow',
@@ -1450,6 +1468,41 @@ function switchRelativeTab(context, direction) {
   return switchTab(context, tabs[(currentIndex + direction + tabs.length) % tabs.length].id);
 }
 
+// Everyday page tools: find, print, save, screenshot, developer tools.
+const findTracked = new WeakSet();
+function trackFindResults(context, contents) {
+  if (findTracked.has(contents)) return;
+  findTracked.add(contents);
+  contents.on('found-in-page', (_event, result) => {
+    if (context.activeTab?.view.webContents !== contents) return;
+    sendState(context, { type: 'find-result', active: result.activeMatchOrdinal || 0, matches: result.matches || 0, final: !!result.finalUpdate });
+  });
+}
+async function pageCommand(context, action) {
+  const contents = context.activeTab?.view.webContents;
+  if (action === 'find') { context.window.webContents.focus(); sendState(context, { type: 'open-find' }); return true; }
+  if (!contents || contents.isDestroyed()) return false;
+  if (action === 'print') { contents.print({ silent: false, printBackground: true }, () => {}); return true; }
+  if (action === 'devtools') { if (contents.isDevToolsOpened()) contents.closeDevTools(); else contents.openDevTools({ mode: 'detach' }); return true; }
+  if (action === 'save-page') {
+    const title = (contents.getTitle() || 'page').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'page';
+    const { canceled, filePath } = await dialog.showSaveDialog(context.window, { defaultPath: path.join(app.getPath('downloads'), title + '.html'), filters: [{ name: 'Web page, complete', extensions: ['html'] }] });
+    if (canceled || !filePath) return false;
+    await contents.savePage(filePath, 'HTMLComplete');
+    sendState(context, { type: 'page-tool-done', message: 'Page saved' });
+    return true;
+  }
+  if (action === 'screenshot') {
+    const image = await contents.capturePage();
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filePath = path.join(app.getPath('downloads'), 'Blackout screenshot ' + stamp + '.png');
+    await fs.promises.writeFile(filePath, image.toPNG());
+    sendState(context, { type: 'page-tool-done', message: 'Screenshot saved to Downloads' });
+    return true;
+  }
+  return false;
+}
+
 function adjustTabZoom(tab, amount) {
   const current = tab?.view?.webContents?.getZoomFactor?.() || 1;
   const next = Math.min(5, Math.max(0.25, Math.round((current + amount) * 100) / 100));
@@ -1819,6 +1872,20 @@ function registerIpc() {
       accelerator: 'CmdOrCtrl+Shift+B',
       click: () => sendState(context, { type: 'toggle-bookmarks-bar' })
     }));
+    menu.append(new MenuItem({ label: 'History', accelerator: 'CmdOrCtrl+H', click: () => sendState(context, { type: 'open-history' }) }));
+    menu.append(new MenuItem({ label: 'Downloads', accelerator: 'CmdOrCtrl+J', click: () => sendState(context, { type: 'open-downloads' }) }));
+    menu.append(new MenuItem({ type: 'separator' }));
+    menu.append(new MenuItem({ label: 'Find on page…', accelerator: 'CmdOrCtrl+F', click: () => pageCommand(context, 'find') }));
+    menu.append(new MenuItem({ label: 'Zoom', submenu: [
+      { label: 'Zoom in', accelerator: 'CmdOrCtrl+=', click: () => context.activeTab && adjustTabZoom(context.activeTab, 0.1) },
+      { label: 'Zoom out', accelerator: 'CmdOrCtrl+-', click: () => context.activeTab && adjustTabZoom(context.activeTab, -0.1) },
+      { label: 'Actual size', accelerator: 'CmdOrCtrl+0', click: () => context.activeTab?.view.webContents.setZoomFactor(1) },
+    ] }));
+    menu.append(new MenuItem({ label: 'Print…', accelerator: 'CmdOrCtrl+P', click: () => pageCommand(context, 'print') }));
+    menu.append(new MenuItem({ label: 'Save page as…', accelerator: 'CmdOrCtrl+S', click: () => pageCommand(context, 'save-page').catch(() => {}) }));
+    menu.append(new MenuItem({ label: 'Take screenshot', accelerator: 'CmdOrCtrl+Shift+S', click: () => pageCommand(context, 'screenshot').catch(() => {}) }));
+    menu.append(new MenuItem({ label: 'Developer tools', accelerator: 'F12', click: () => pageCommand(context, 'devtools') }));
+    menu.append(new MenuItem({ type: 'separator' }));
     menu.append(new MenuItem({
       label: 'Extensions',
       click: () => sendState(context, { type: 'open-extensions-dialog' })
@@ -1905,6 +1972,25 @@ function registerIpc() {
     }
     return true;
   });
+  ipcMain.handle('browser:find', (event, text, options = {}) => {
+    const context = contextForSender(event.sender);
+    const contents = context?.activeTab?.view.webContents;
+    if (!contents || contents.isDestroyed()) return false;
+    if (typeof text !== 'string' || !text) { contents.stopFindInPage('clearSelection'); return true; }
+    trackFindResults(context, contents);
+    contents.findInPage(text.slice(0, 500), { forward: options.forward !== false, findNext: !!options.findNext, matchCase: !!options.matchCase });
+    return true;
+  });
+  ipcMain.handle('browser:page-command', (event, action) => {
+    const context = contextForSender(event.sender);
+    if (!context || !['find', 'print', 'devtools', 'save-page', 'screenshot', 'zoom-in', 'zoom-out', 'zoom-reset'].includes(action)) return false;
+    if (action.startsWith('zoom')) {
+      const tab = context.activeTab; if (!tab) return false;
+      if (action === 'zoom-reset') tab.view.webContents.setZoomFactor(1); else adjustTabZoom(tab, action === 'zoom-in' ? 0.1 : -0.1);
+      return Math.round(tab.view.webContents.getZoomFactor() * 100);
+    }
+    return pageCommand(context, action);
+  });
   ipcMain.handle('browser:control', (event, action) => {
     const context = contextForSender(event.sender);
     if (!context || typeof action !== 'string') return false;
@@ -1976,7 +2062,7 @@ function registerIpc() {
   ipcMain.handle('browser:site-device',(event,type,value)=>{
     const context=contextForSender(event.sender),popup=context?.siteInfoPopup,contents=popup?.sitePage;
     if(!popup||event.sender!==popup.webContents||!contents||contents.isDestroyed()||contents.getURL()!==popup.siteUrl)return false;
-    const changed=sitePermissions.setPage(contents,type,value);
+    const changed=type==='popups'?popupPermissions.set(context.profile.mode,contents.getURL(),value):sitePermissions.setPage(contents,type,value);
     if(changed&&value!=='allow')contents.reload();
     return changed;
   });

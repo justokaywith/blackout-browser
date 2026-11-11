@@ -1244,7 +1244,33 @@ if (!window.blackout) {
   refreshFavorites();
   renderTabs({ tabs: [], activeId: null });
 } else {
+  // Find on page (Ctrl+F) and page-tool feedback
+  const findBar = $('#find-bar'), findInput = $('#find-input'), findCount = $('#find-count');
+  let findText = '';
+  const runFind = (findNext = false, forward = true) => {
+    findText = findInput.value;
+    if (!findText) { findCount.textContent = ''; window.blackout.find?.(''); return; }
+    window.blackout.find?.(findText, { findNext, forward });
+  };
+  const openFind = () => { if (!findBar) return; findBar.hidden = false; requestAnimationFrame(() => { findInput.focus(); findInput.select(); }); if (findInput.value) runFind(false); };
+  const closeFind = () => { if (!findBar || findBar.hidden) return; findBar.hidden = true; findCount.textContent = ''; window.blackout.find?.(''); };
+  findInput?.addEventListener('input', () => runFind(false));
+  findInput?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); runFind(true, !event.shiftKey); }
+    else if (event.key === 'Escape') { event.preventDefault(); closeFind(); }
+  });
+  $('#find-next')?.addEventListener('click', () => runFind(true, true));
+  $('#find-prev')?.addEventListener('click', () => runFind(true, false));
+  $('#find-close')?.addEventListener('click', closeFind);
+  findBar?.addEventListener('submit', event => { event.preventDefault(); runFind(true, true); });
+  let snackTimer = 0;
+  const snack = message => { const el = $('#page-snackbar'); if (!el) return; el.textContent = message; el.hidden = false; clearTimeout(snackTimer); snackTimer = setTimeout(() => { el.hidden = true; }, 3200); };
+
   window.blackout.onState(state => {
+    if (state.type === 'open-find') { openFind(); return; }
+    if (state.type === 'find-next') { if (findBar?.hidden) openFind(); else runFind(true, true); return; }
+    if (state.type === 'find-result') { if (findCount) findCount.textContent = state.matches ? state.active + '/' + state.matches : (findText ? 'No results' : ''); findBar?.classList.toggle('no-match', !!findText && !state.matches); return; }
+    if (state.type === 'page-tool-done') { snack(state.message || 'Done'); return; }
     if (state.type === 'profile') {
       profileMode = state.mode;
       document.documentElement.dataset.profile = profileMode;

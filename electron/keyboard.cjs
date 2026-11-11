@@ -7,6 +7,8 @@ function shortcutAction(input) {
   if (modifier && input.shift === true && key === 'b') return 'toggle-bookmarks-bar';
   if (modifier && input.shift === true && key === 'p') return 'toggle-pip';
   if (modifier && input.shift === true && key === 'r') return 'hard-reload';
+  if (modifier && input.shift === true && key === 'i') return 'devtools';
+  if (modifier && input.shift === true && key === 's') return 'screenshot';
   if (modifier && input.shift !== true) {
     if (key === 'l' || key === 'k') return 'focus-address';
     if (key === 't') return 'new-tab';
@@ -15,6 +17,9 @@ function shortcutAction(input) {
     if (key === 'h') return 'history';
     if (key === 'j') return 'downloads';
     if (key === 'd') return 'bookmark-page';
+    if (key === 'f') return 'find';
+    if (key === 'p') return 'print';
+    if (key === 's') return 'save-page';
     if (key === 'tab') return 'next-tab';
     if (key === '+' || key === '=') return 'zoom-in';
     if (key === '-' || key === '_') return 'zoom-out';
@@ -30,6 +35,8 @@ function shortcutAction(input) {
   if (modifier && key === 'f5') return 'hard-reload';
   if (!modifier && key === 'f5') return 'reload';
   if (!modifier && key === 'f11') return 'toggle-fullscreen';
+  if (!modifier && key === 'f12') return 'devtools';
+  if (!modifier && input.shift !== true && key === 'f3') return 'find-next';
   return null;
 }
 
